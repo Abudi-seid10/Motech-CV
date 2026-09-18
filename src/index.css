@@ -129,9 +129,60 @@
 /* Print layout — used only when exporting the PDF (see pdf/PrintLayout) */
 /* Deliberately theme-independent: always light + ATS-plain.             */
 /* --------------------------------------------------------------------- */
+@page {
+  margin: 0;
+}
+
 .pdf-export-root {
+  box-sizing: border-box;
   width: 794px; /* A4 @ 96dpi */
+  max-width: 794px;
+  padding: 48px; /* 0.5in margins at 96dpi */
   background: #ffffff;
   color: #17171a;
   font-family: "DM Sans", sans-serif;
+  overflow-x: hidden;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  orphans: 3;
+  widows: 3;
+}
+
+.pdf-export-root *,
+.pdf-export-root *::before,
+.pdf-export-root *::after {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.pdf-section,
+.pdf-entry {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.pdf-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: baseline;
+}
+
+.pdf-row > * {
+  min-width: 0;
+}
+
+.pdf-row > :last-child {
+  max-width: 38%;
+  text-align: right;
+}
+
+.pdf-export-root ul,
+.pdf-export-root ol {
+  min-width: 0;
+  padding-left: 1.25rem;
+}
+
+.pdf-export-root li {
+  min-width: 0;
 }

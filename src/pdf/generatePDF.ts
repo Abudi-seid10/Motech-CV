@@ -3,6 +3,7 @@ import jsPDF from "jspdf";
 
 const A4_WIDTH_PT = 595.28;
 const A4_HEIGHT_PT = 841.89;
+const PAGE_MARGIN_CSS_PX = 48;
 const UNSUPPORTED_COLOR_FUNCTION = /oklch\([^)]*\)|oklab\([^)]*\)/gi;
 
 function removeUnsupportedColorRules(document: Document) {
@@ -36,6 +37,47 @@ function removeUnsupportedColorRules(document: Document) {
       // Cross-origin stylesheets are removed above when html2canvas clones the document.
     }
   });
+}
+
+function getNextPageEnd(
+  node: HTMLElement,
+  start: number,
+  pageHeight: number,
+  pageIndex: number,
+  documentHeight: number
+) {
+  const pageContentHeight = pageHeight - (pageIndex === 0 ? PAGE_MARGIN_CSS_PX : PAGE_MARGIN_CSS_PX * 2);
+  const idealEnd = Math.min(start + pageContentHeight, documentHeight);
+  const nodeTop = node.getBoundingClientRect().top;
+  const blocks = Array.from(node.querySelectorAll<HTMLElement>(".pdf-section, .pdf-entry"));
+  const blockToMove = blocks.find((block) => {
+    const rect = block.getBoundingClientRect();
+    const top = rect.top - nodeTop;
+    const bottom = rect.bottom - nodeTop;
+    return top > start + 1 && top < idealEnd && bottom > idealEnd && bottom - top <= pageContentHeight;
+  });
+
+  return blockToMove ? blockToMove.getBoundingClientRect().top - nodeTop : idealEnd;
+}
+
+function getPageBoundaries(node: HTMLElement, canvas: HTMLCanvasElement, pageHeightPx: number) {
+  const scale = canvas.width / node.getBoundingClientRect().width;
+  const pageHeight = pageHeightPx / scale;
+  const documentHeight = node.getBoundingClientRect().height;
+  const boundaries: number[] = [];
+  let start = 0;
+  let pageIndex = 0;
+
+  while (start < documentHeight) {
+    const end = getNextPageEnd(node, start, pageHeight, pageIndex, documentHeight);
+
+    boundaries.push(end);
+    if (end <= start) break;
+    start = end;
+    pageIndex += 1;
+  }
+
+  return boundaries;
 }
 
 /**
@@ -75,23 +117,29 @@ export async function generatePDF(filename = "cv") {
 
   const pdf = new jsPDF({ unit: "pt", format: "a4" });
   const pageHeightPx = Math.floor((canvas.width * A4_HEIGHT_PT) / A4_WIDTH_PT);
-  const pageCount = Math.ceil(canvas.height / pageHeightPx);
+  const scale = canvas.width / node.getBoundingClientRect().width;
+  const boundaries = getPageBoundaries(node, canvas, pageHeightPx);
 
-  for (let page = 0; page < pageCount; page += 1) {
-    const sourceY = page * pageHeightPx;
-    const sourceHeight = Math.min(pageHeightPx, canvas.height - sourceY);
+  for (let page = 0, sourceStart = 0; page < boundaries.length; page += 1) {
+    const sourceY = Math.round(sourceStart * scale);
+    const sourceHeight = Math.min(
+      Math.round((boundaries[page] - sourceStart) * scale),
+      canvas.height - sourceY
+    );
     const pageCanvas = document.createElement("canvas");
     pageCanvas.width = canvas.width;
-    pageCanvas.height = sourceHeight;
+    pageCanvas.height = pageHeightPx;
     const pageContext = pageCanvas.getContext("2d");
 
     if (!pageContext) {
       throw new Error("Couldn't prepare a PDF page — try again, or reload the page first.");
     }
 
-    pageContext.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, 0, canvas.width, sourceHeight);
+    const outputY = page === 0 ? 0 : Math.round(PAGE_MARGIN_CSS_PX * scale);
+    pageContext.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, outputY, canvas.width, sourceHeight);
     if (page > 0) pdf.addPage();
-    pdf.addImage(pageCanvas, "PNG", 0, 0, A4_WIDTH_PT, (sourceHeight * A4_WIDTH_PT) / canvas.width);
+    pdf.addImage(pageCanvas, "PNG", 0, 0, A4_WIDTH_PT, A4_HEIGHT_PT);
+    sourceStart = boundaries[page];
   }
 
   pdf.save(`${filename}.pdf`);

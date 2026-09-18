@@ -9,7 +9,7 @@ import { CVData } from "@/lib/types";
 export default function PrintLayout({ data }: { data: CVData }) {
   const { personal } = data;
   return (
-    <div id="pdf-export-root" className="pdf-export-root p-12">
+    <div id="pdf-export-root" className="pdf-export-root">
       <h1 className="text-3xl font-bold tracking-tight">{personal.name}</h1>
       <p className="text-sm text-[#5b5b63] mt-1">{personal.title}</p>
       <p className="text-xs text-[#7a7a82] mt-2">
@@ -19,7 +19,7 @@ export default function PrintLayout({ data }: { data: CVData }) {
       </p>
 
       {data.summary && (
-        <section className="mt-6">
+        <section className="pdf-section mt-6">
           <h2 className="text-xs font-bold uppercase tracking-widest text-[#a6862a] border-b border-[#e4e1d8] pb-1 mb-2">
             Profile
           </h2>
@@ -28,7 +28,7 @@ export default function PrintLayout({ data }: { data: CVData }) {
       )}
 
       {data.competencies?.length > 0 && (
-        <section className="mt-6">
+        <section className="pdf-section mt-6">
           <h2 className="text-xs font-bold uppercase tracking-widest text-[#a6862a] border-b border-[#e4e1d8] pb-1 mb-2">
             Core Competencies
           </h2>
@@ -42,13 +42,13 @@ export default function PrintLayout({ data }: { data: CVData }) {
       )}
 
       {data.experience?.length > 0 && (
-        <section className="mt-6">
+        <section className="pdf-section mt-6">
           <h2 className="text-xs font-bold uppercase tracking-widest text-[#a6862a] border-b border-[#e4e1d8] pb-1 mb-2">
             Professional Experience
           </h2>
           {data.experience.map((e, i) => (
-            <div key={i} className="mb-4">
-              <div className="flex justify-between items-baseline">
+            <div key={i} className="pdf-entry mb-4">
+              <div className="pdf-row">
                 <p className="text-sm font-bold">
                   {e.role} — {e.company}
                 </p>
@@ -66,13 +66,13 @@ export default function PrintLayout({ data }: { data: CVData }) {
       )}
 
       {data.education?.length > 0 && (
-        <section className="mt-6">
+        <section className="pdf-section mt-6">
           <h2 className="text-xs font-bold uppercase tracking-widest text-[#a6862a] border-b border-[#e4e1d8] pb-1 mb-2">
             Education
           </h2>
           {data.education.map((e, i) => (
-            <div key={i} className="mb-2">
-              <div className="flex justify-between items-baseline">
+            <div key={i} className="pdf-entry mb-2">
+              <div className="pdf-row">
                 <p className="text-sm font-bold">{e.school}</p>
                 <p className="text-xs text-[#7a7a82]">{e.dates}</p>
               </div>
@@ -84,7 +84,7 @@ export default function PrintLayout({ data }: { data: CVData }) {
       )}
 
       {data.certifications?.length > 0 && (
-        <section className="mt-6">
+        <section className="pdf-section mt-6">
           <h2 className="text-xs font-bold uppercase tracking-widest text-[#a6862a] border-b border-[#e4e1d8] pb-1 mb-2">
             Certifications
           </h2>
@@ -99,7 +99,7 @@ export default function PrintLayout({ data }: { data: CVData }) {
       )}
 
       {data.awards?.length > 0 && (
-        <section className="mt-6">
+        <section className="pdf-section mt-6">
           <h2 className="text-xs font-bold uppercase tracking-widest text-[#a6862a] border-b border-[#e4e1d8] pb-1 mb-2">
             Awards
           </h2>
@@ -113,7 +113,7 @@ export default function PrintLayout({ data }: { data: CVData }) {
       )}
 
       {(data.languages?.length > 0 || data.strengths?.length > 0) && (
-        <section className="mt-6">
+        <section className="pdf-section mt-6">
           <h2 className="text-xs font-bold uppercase tracking-widest text-[#a6862a] border-b border-[#e4e1d8] pb-1 mb-2">
             Languages & Strengths
           </h2>
@@ -131,13 +131,13 @@ export default function PrintLayout({ data }: { data: CVData }) {
       {data.customSections
         ?.filter((s) => s.entries.length > 0)
         .map((s) => (
-          <section key={s.id} className="mt-6">
+          <section key={s.id} className="pdf-section mt-6">
             <h2 className="text-xs font-bold uppercase tracking-widest text-[#a6862a] border-b border-[#e4e1d8] pb-1 mb-2">
               {s.title}
             </h2>
             {s.entries.map((e, i) => (
-              <div key={i} className="mb-3">
-                <div className="flex justify-between items-baseline">
+              <div key={i} className="pdf-entry mb-3">
+                <div className="pdf-row">
                   <p className="text-sm font-bold">
                     {e.heading}
                     {e.subheading ? ` — ${e.subheading}` : ""}
