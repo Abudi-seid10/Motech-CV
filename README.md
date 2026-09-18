@@ -248,3 +248,5 @@ static SPA — no server/API to deploy.
 ## License
 
 MIT — fork it, run your own instance, credit is appreciated but not required.
+#   M o t e c h - C V  
+ 
