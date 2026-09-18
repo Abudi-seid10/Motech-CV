@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --------------------------------------------------------------------- */
+/* Theme tokens — swapped at runtime via [data-theme] on <html>          */
+/* (see src/themes/index.ts applyTheme()). Add a new theme by adding a   */
+/* new [data-theme="..."] block here and an entry in src/themes/index.ts */
+/* --------------------------------------------------------------------- */
+:root,
+[data-theme="editorial-gold"] {
+  --c-ink: 11 11 12;
+  --c-surface: 18 18 20;
+  --c-raised: 25 25 28;
+  --c-border: 42 42 46;
+  --c-gold: 201 168 76;
+  --c-gold-soft: 227 214 166;
+  --c-gold-dim: 138 117 56;
+  --c-bone: 242 239 232;
+  --c-muted: 154 151 143;
+
+  --font-display: "Bebas Neue", sans-serif;
+  --font-serif-display: "Fraunces", serif;
+  --font-body: "Syne", sans-serif;
+  --font-sans: "DM Sans", sans-serif;
+  --font-mono: "DM Mono", monospace;
+}
+
+[data-theme="minimal-mono"] {
+  --c-ink: 255 255 255;
+  --c-surface: 250 250 250;
+  --c-raised: 243 243 243;
+  --c-border: 224 224 224;
+  --c-gold: 23 23 23;
+  --c-gold-soft: 55 55 55;
+  --c-gold-dim: 120 120 120;
+  --c-bone: 23 23 23;
+  --c-muted: 118 118 118;
+
+  --font-display: "DM Sans", sans-serif;
+  --font-serif-display: "DM Sans", sans-serif;
+  --font-body: "DM Sans", sans-serif;
+  --font-sans: "DM Sans", sans-serif;
+  --font-mono: "DM Mono", monospace;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-ink text-bone font-sans antialiased;
+    background-image:
+      radial-gradient(circle at 15% 0%, rgb(var(--c-gold) / 0.07), transparent 40%),
+      radial-gradient(circle at 100% 30%, rgb(var(--c-gold) / 0.05), transparent 45%);
+  }
+  ::selection {
+    @apply bg-gold text-ink;
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply font-mono text-[11px] uppercase tracking-widest2 text-gold-dim;
+  }
+  .section-number {
+    @apply font-display text-6xl text-gold/20 leading-none;
+  }
+  .card {
+    @apply border border-border bg-surface/60 backdrop-blur-sm rounded-sm;
+  }
+}
+
+/* --------------------------------------------------------------------- */
+/* Print layout — used only when exporting the PDF (see pdf/PrintLayout) */
+/* Deliberately theme-independent: always light + ATS-plain.             */
+/* --------------------------------------------------------------------- */
+.pdf-export-root {
+  width: 794px; /* A4 @ 96dpi */
+  background: #ffffff;
+  color: #17171a;
+  font-family: "DM Sans", sans-serif;
+}

@@ -1,0 +1,98 @@
+{
+  "personal": {
+    "name": "Jordan Rivera",
+    "title": "Senior Product Designer",
+    "location": "Austin, TX",
+    "phone": "+1 555 010 2938",
+    "email": "jordan@example.com",
+    "linkedin": "linkedin.com/in/jordanrivera",
+    "github": "github.com/jordanrivera"
+  },
+  "summary": "Product designer with 8 years building design systems and 0-to-1 products for B2B SaaS teams. Focused on making complex workflows feel simple, and on pairing closely with engineering to ship fast without losing craft.",
+  "competencies": [
+    { "category": "Design", "items": ["Design Systems", "Prototyping", "User Research", "Interaction Design", "Figma"] },
+    { "category": "Front-end", "items": ["React", "TypeScript", "Tailwind CSS", "Storybook"] },
+    { "category": "Process", "items": ["Design Sprints", "A/B Testing", "Accessibility (WCAG 2.1)", "Cross-functional Leadership"] }
+  ],
+  "experience": [
+    {
+      "company": "Northwind Analytics",
+      "role": "Senior Product Designer",
+      "dates": "2022 – Present",
+      "location": "Austin, TX",
+      "bullets": [
+        "Led the redesign of the core dashboard, improving task completion time by 34%.",
+        "Built and maintain the company's design system, adopted across 6 product teams.",
+        "Mentor two junior designers and run the team's weekly critique."
+      ]
+    },
+    {
+      "company": "Fieldstone",
+      "role": "Product Designer",
+      "dates": "2019 – 2022",
+      "location": "Remote",
+      "bullets": [
+        "Owned end-to-end design for the onboarding flow, cutting drop-off by 21%.",
+        "Partnered with engineering to ship a component library in React + Tailwind."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "school": "University of Texas at Austin",
+      "degree": "B.F.A., Design",
+      "dates": "2015 – 2019",
+      "details": "Senior thesis on accessible data visualization, presented at the campus design showcase."
+    }
+  ],
+  "certifications": [
+    { "name": "Certified Usability Analyst", "issuer": "Human Factors International", "year": "2023" }
+  ],
+  "awards": [
+    { "name": "Best Redesign", "issuer": "Northwind Analytics internal awards", "year": "2023", "project": "Core dashboard redesign" }
+  ],
+  "languages": [
+    { "name": "English", "level": "Native" },
+    { "name": "Spanish", "level": "Professional Working Proficiency" }
+  ],
+  "strengths": [
+    "Design Systems", "Cross-functional Collaboration", "Prototyping", "Mentorship", "Accessibility"
+  ],
+  "customSections": [
+    {
+      "id": "example-projects",
+      "title": "Projects",
+      "entries": [
+        {
+          "heading": "Open Component Kit",
+          "subheading": "Side project — React + Tailwind",
+          "meta": "2023",
+          "body": "An open-source component library used by ~40 small teams, focused on accessible defaults out of the box.",
+          "bullets": ["1.2k GitHub stars", "Featured in a React newsletter roundup"]
+        }
+      ]
+    },
+    {
+      "id": "example-recommendations",
+      "title": "Recommendations",
+      "entries": [
+        {
+          "heading": "Sam Okafor",
+          "subheading": "VP Product, Northwind Analytics",
+          "meta": "2024",
+          "body": "Jordan is the rare designer who can also sit in a sprint planning meeting and speak fluent engineering. The dashboard redesign they led is still our most-cited case study."
+        }
+      ]
+    }
+  ],
+  "card": {
+    "tagline": "Open to select freelance product design work",
+    "showEmail": true,
+    "showPhone": false,
+    "showLinkedin": true,
+    "showGithub": true,
+    "links": [
+      { "label": "Portfolio", "url": "https://jordanrivera.example.com" }
+    ]
+  }
+}
