@@ -140,6 +140,7 @@
   padding: 48px; /* 0.5in margins at 96dpi */
   background: #ffffff;
   color: #17171a;
+  text-align: left;
   font-family: "DM Sans", sans-serif;
   overflow-x: hidden;
   overflow-wrap: anywhere;

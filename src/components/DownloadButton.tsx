@@ -22,7 +22,7 @@ export default function DownloadButton({ filename = "cv" }: { filename?: string 
       <button
         onClick={handleClick}
         disabled={busy}
-        className="group inline-flex items-center gap-3 border border-gold/50 px-6 py-3 font-mono text-xs uppercase tracking-widest2 text-gold-soft hover:bg-gold hover:text-ink transition-colors disabled:opacity-50 disabled:cursor-wait"
+        className="group inline-flex items-center justify-center gap-3 rounded-full border border-gold/50 px-6 py-3 font-mono text-xs uppercase tracking-widest2 text-gold-soft hover:bg-gold hover:text-ink transition-colors disabled:opacity-50 disabled:cursor-wait"
       >
         {busy ? "Preparing PDF…" : "Download CV — PDF"}
         <span className="transition-transform group-hover:translate-y-0.5">↓</span>
