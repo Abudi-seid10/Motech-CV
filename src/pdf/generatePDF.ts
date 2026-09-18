@@ -3,6 +3,40 @@ import jsPDF from "jspdf";
 
 const A4_WIDTH_PT = 595.28;
 const A4_HEIGHT_PT = 841.89;
+const UNSUPPORTED_COLOR_FUNCTION = /oklch\([^)]*\)|oklab\([^)]*\)/gi;
+
+function removeUnsupportedColorRules(document: Document) {
+  document.querySelectorAll("link[rel='stylesheet']").forEach((link) => {
+    const href = link.getAttribute("href");
+    if (href && new URL(href, document.baseURI).origin !== document.location.origin) {
+      link.remove();
+    }
+  });
+
+  document.querySelectorAll("style").forEach((style) => {
+    style.textContent = style.textContent?.replace(UNSUPPORTED_COLOR_FUNCTION, "transparent") ?? "";
+  });
+
+  document.querySelectorAll<HTMLElement>("[style]").forEach((element) => {
+    element.setAttribute(
+      "style",
+      element.getAttribute("style")?.replace(UNSUPPORTED_COLOR_FUNCTION, "transparent") ?? ""
+    );
+  });
+
+  Array.from(document.styleSheets).forEach((styleSheet) => {
+    try {
+      const rules = styleSheet.cssRules;
+      for (let index = rules.length - 1; index >= 0; index -= 1) {
+        if (rules[index].cssText.match(UNSUPPORTED_COLOR_FUNCTION)) {
+          styleSheet.deleteRule(index);
+        }
+      }
+    } catch {
+      // Cross-origin stylesheets are removed above when html2canvas clones the document.
+    }
+  });
+}
 
 /**
  * Captures the off-screen #pdf-export-root node (rendered by PrintLayout)
@@ -32,6 +66,7 @@ export async function generatePDF(filename = "cv") {
     useCORS: true,
     logging: false,
     windowWidth: node.scrollWidth,
+    onclone: removeUnsupportedColorRules,
   });
 
   if (canvas.width === 0 || canvas.height === 0) {
