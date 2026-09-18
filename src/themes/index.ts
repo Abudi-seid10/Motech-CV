@@ -1,4 +1,4 @@
-export type ThemeId = "editorial-gold" | "minimal-mono";
+export type ThemeId = "editorial-gold" | "minimal-mono" | "coastal-cyan" | "forest-lime" | "terracotta-ink";
 
 export interface Theme {
   id: ThemeId;
@@ -16,6 +16,21 @@ export const THEMES: Theme[] = [
     id: "minimal-mono",
     name: "Minimal Mono",
     description: "Light, clean, monochrome — reads closest to the downloaded PDF.",
+  },
+  {
+    id: "coastal-cyan",
+    name: "Coastal Cyan",
+    description: "Deep navy, bright cyan accents, and a crisp modern rhythm.",
+  },
+  {
+    id: "forest-lime",
+    name: "Forest Lime",
+    description: "Warm paper, evergreen surfaces, and lively lime highlights.",
+  },
+  {
+    id: "terracotta-ink",
+    name: "Terracotta Ink",
+    description: "Soft clay, charcoal ink, and a confident creative feel.",
   },
 ];
 

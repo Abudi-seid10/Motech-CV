@@ -38,24 +38,25 @@ export async function generatePDF(filename = "cv") {
     throw new Error("The printable CV rendered empty — try again, or reload the page first.");
   }
 
-  const imgWidth = A4_WIDTH_PT;
-  const pageHeight = A4_HEIGHT_PT;
-  const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
   const pdf = new jsPDF({ unit: "pt", format: "a4" });
-  let heightLeft = imgHeight;
-  let position = 0;
+  const pageHeightPx = Math.floor((canvas.width * A4_HEIGHT_PT) / A4_WIDTH_PT);
+  const pageCount = Math.ceil(canvas.height / pageHeightPx);
 
-  const imgData = canvas.toDataURL("image/png");
+  for (let page = 0; page < pageCount; page += 1) {
+    const sourceY = page * pageHeightPx;
+    const sourceHeight = Math.min(pageHeightPx, canvas.height - sourceY);
+    const pageCanvas = document.createElement("canvas");
+    pageCanvas.width = canvas.width;
+    pageCanvas.height = sourceHeight;
+    const pageContext = pageCanvas.getContext("2d");
 
-  pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-  heightLeft -= pageHeight;
+    if (!pageContext) {
+      throw new Error("Couldn't prepare a PDF page — try again, or reload the page first.");
+    }
 
-  while (heightLeft > 0) {
-    position = heightLeft - imgHeight;
-    pdf.addPage();
-    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
+    pageContext.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, 0, canvas.width, sourceHeight);
+    if (page > 0) pdf.addPage();
+    pdf.addImage(pageCanvas, "PNG", 0, 0, A4_WIDTH_PT, (sourceHeight * A4_WIDTH_PT) / canvas.width);
   }
 
   pdf.save(`${filename}.pdf`);

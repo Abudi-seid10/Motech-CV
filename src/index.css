@@ -44,6 +44,60 @@
   --font-mono: "DM Mono", monospace;
 }
 
+[data-theme="coastal-cyan"] {
+  --c-ink: 8 24 35;
+  --c-surface: 13 38 52;
+  --c-raised: 20 53 67;
+  --c-border: 39 83 96;
+  --c-gold: 65 210 211;
+  --c-gold-soft: 168 241 235;
+  --c-gold-dim: 74 156 164;
+  --c-bone: 233 247 246;
+  --c-muted: 145 180 184;
+
+  --font-display: "Syne", sans-serif;
+  --font-serif-display: "Fraunces", serif;
+  --font-body: "DM Sans", sans-serif;
+  --font-sans: "DM Sans", sans-serif;
+  --font-mono: "DM Mono", monospace;
+}
+
+[data-theme="forest-lime"] {
+  --c-ink: 244 241 225;
+  --c-surface: 235 236 211;
+  --c-raised: 222 227 195;
+  --c-border: 190 199 161;
+  --c-gold: 43 91 58;
+  --c-gold-soft: 40 84 53;
+  --c-gold-dim: 86 123 73;
+  --c-bone: 27 45 33;
+  --c-muted: 95 112 86;
+
+  --font-display: "Fraunces", serif;
+  --font-serif-display: "Fraunces", serif;
+  --font-body: "Syne", sans-serif;
+  --font-sans: "DM Sans", sans-serif;
+  --font-mono: "DM Mono", monospace;
+}
+
+[data-theme="terracotta-ink"] {
+  --c-ink: 35 25 24;
+  --c-surface: 49 34 31;
+  --c-raised: 65 43 38;
+  --c-border: 101 64 54;
+  --c-gold: 226 126 88;
+  --c-gold-soft: 247 181 143;
+  --c-gold-dim: 177 91 68;
+  --c-bone: 250 237 219;
+  --c-muted: 185 151 132;
+
+  --font-display: "Bebas Neue", sans-serif;
+  --font-serif-display: "Fraunces", serif;
+  --font-body: "Syne", sans-serif;
+  --font-sans: "DM Sans", sans-serif;
+  --font-mono: "DM Mono", monospace;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
