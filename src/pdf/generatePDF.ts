@@ -8,13 +8,16 @@ const UNSUPPORTED_COLOR_FUNCTION = /oklch\([^)]*\)|oklab\([^)]*\)/gi;
 const BREAK_SELECTOR = ".pdf-section, .pdf-entry";
 
 function removeUnsupportedColorRules(document: Document) {
-  document.querySelectorAll("link[rel='stylesheet']").forEach((link) => {
-    const href = link.getAttribute("href");
-    if (href && new URL(href, document.baseURI).origin !== document.location.origin) {
-      link.remove();
-    }
-  });
-
+  // NOTE: we deliberately do NOT remove cross-origin <link rel="stylesheet">
+  // tags here. An earlier version stripped them to dodge oklch()/oklab()
+  // colors html2canvas can't parse — but that also strips the Google Fonts
+  // stylesheet from the cloned document, silently falling back to system
+  // fonts for the capture. Break points are measured from the *live* DOM
+  // (real fonts, real metrics), so a font swap in the clone makes the
+  // measured break points land in the wrong place in the actual image —
+  // pages get cut mid-line or with a large stray gap. The styleSheets loop
+  // below already skips cross-origin sheets safely via try/catch, so
+  // removing the link achieved nothing except breaking fonts.
   document.querySelectorAll("style").forEach((style) => {
     style.textContent = style.textContent?.replace(UNSUPPORTED_COLOR_FUNCTION, "transparent") ?? "";
   });
@@ -35,7 +38,8 @@ function removeUnsupportedColorRules(document: Document) {
         }
       }
     } catch {
-      // Cross-origin stylesheets are removed above when html2canvas clones the document.
+      // Cross-origin stylesheet (e.g. Google Fonts) — can't read its rules,
+      // and don't need to: it's @font-face declarations, not colors.
     }
   });
 }
@@ -71,7 +75,11 @@ function getPageEnd(
   const idealEnd = Math.min(start + contentHeightCssPx, documentHeightCssPx);
   if (idealEnd >= documentHeightCssPx) return documentHeightCssPx;
 
-  const minBreak = start + contentHeightCssPx * 0.55;
+  // Accepting a break too early leaves a large, inconsistent blank gap at
+  // the bottom of the page — e.g. 0.55 could leave up to 45% of a page
+  // empty just to avoid splitting one entry. 0.78 trades a bit more
+  // (rare, minor) mid-entry splitting for pages that are actually full.
+  const minBreak = start + contentHeightCssPx * 0.78;
   for (let index = breakPoints.length - 1; index >= 0; index -= 1) {
     const point = breakPoints[index];
     if (point > minBreak && point < idealEnd) {
@@ -158,6 +166,16 @@ export async function generatePDF(filename = "cv") {
     if (!pageContext) {
       throw new Error("Couldn't prepare a PDF page — try again, or reload the page first.");
     }
+
+    // A freshly created canvas is fully *transparent*, not white. Left
+    // unfilled, the margin areas (and any short final page) are transparent
+    // pixels embedded in the PDF's PNG image — most viewers show the page's
+    // own white background through them, but not all of them do, and some
+    // print pipelines/PDF-to-image converters render untouched alpha=0
+    // regions as black. Filling white first makes every page's margins
+    // genuinely opaque white, not "probably looks white in this viewer."
+    pageContext.fillStyle = "#ffffff";
+    pageContext.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
 
     const outputY = page === 0 ? 0 : marginPx;
     pageContext.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, outputY, canvas.width, sourceHeight);
