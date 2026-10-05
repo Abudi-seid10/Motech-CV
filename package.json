@@ -12,10 +12,9 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.1.6",
     "@supabase/supabase-js": "^2.45.4",
     "framer-motion": "^11.11.9",
-    "html2canvas": "^1.4.1",
-    "jspdf": "^4.2.1",
     "mammoth": "^1.8.0",
     "pdfjs-dist": "^4.6.82",
     "react": "^18.3.1",

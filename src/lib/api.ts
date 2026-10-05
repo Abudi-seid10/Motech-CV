@@ -36,7 +36,18 @@ export function signup(input: { name: string; email: string; password: string; s
   return supabase.auth.signUp({
     email: input.email,
     password: input.password,
-    options: { data: { name: input.name, slug: input.slug } },
+    options: {
+      data: { name: input.name, slug: input.slug },
+      emailRedirectTo: `${window.location.origin}/login`,
+    },
+  });
+}
+
+export function resendVerification(email: string) {
+  return supabase.auth.resend({
+    type: "signup",
+    email,
+    options: { emailRedirectTo: `${window.location.origin}/login` },
   });
 }
 

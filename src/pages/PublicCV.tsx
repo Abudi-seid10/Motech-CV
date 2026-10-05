@@ -2,16 +2,7 @@ import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useProfile } from "@/hooks/useProfile";
 import { applyTheme, DEFAULT_THEME } from "@/themes";
-import Hero from "@/components/Hero";
-import Summary from "@/components/Summary";
-import Competencies from "@/components/Competencies";
-import Experience from "@/components/Experience";
-import Education from "@/components/Education";
-import Certifications from "@/components/Certifications";
-import Awards from "@/components/Awards";
-import Languages from "@/components/Languages";
-import CustomSections from "@/components/CustomSections";
-import PrintLayout from "@/pdf/PrintLayout";
+import CVPreview from "@/components/cv/CVPreview";
 
 export default function PublicCV() {
   const { slug } = useParams<{ slug: string }>();
@@ -63,15 +54,7 @@ export default function PublicCV() {
         </div>
       )}
 
-      <Hero personal={data.personal} filename={slug} />
-      <Summary summary={data.summary} />
-      <Competencies groups={data.competencies} />
-      <Experience entries={data.experience} />
-      <Education entries={data.education} />
-      <Certifications entries={data.certifications} />
-      <Awards entries={data.awards} />
-      <Languages languages={data.languages} strengths={data.strengths} />
-      <CustomSections sections={data.customSections} startIndex={8} />
+      <CVPreview data={data} filename={slug} />
 
       <footer className="border-t border-border py-10 text-center font-mono text-xs text-muted space-x-4">
         <Link to={`/card/${slug}`} className="text-gold-dim hover:text-gold">Link-in-bio card ↗</Link>
@@ -82,16 +65,6 @@ export default function PublicCV() {
         <span>·</span>
         <Link to="/signup" className="text-gold-dim hover:text-gold">build your own, free</Link>
       </footer>
-
-      {/* Off-screen — captured by the PDF export button. Absolute + a large
-          negative offset keeps it out of view without display:none or a
-          negative z-index, both of which can stop html2canvas from capturing it. */}
-      <div
-        aria-hidden="true"
-        style={{ position: "absolute", top: 0, left: "-9999px", width: "794px", pointerEvents: "none" }}
-      >
-        <PrintLayout data={data} />
-      </div>
     </div>
   );
 }

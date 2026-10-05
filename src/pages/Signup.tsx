@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signup, checkSlugAvailable } from "@/lib/api";
+import { signup, checkSlugAvailable, resendVerification } from "@/lib/api";
 import { slugifyClient } from "@/lib/slug";
 import { isValidSlugFormat, RESERVED_SLUGS } from "@/lib/reserved-slugs";
 
@@ -38,6 +38,8 @@ export default function Signup() {
     return () => clearTimeout(t);
   }, [slug]);
 
+  const [resent, setResent] = useState<string | null>(null);
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -67,6 +69,20 @@ export default function Signup() {
             We sent a confirmation link to <span className="text-bone">{email}</span>. Click it, then{" "}
             <a href="/login" className="text-gold-dim hover:text-gold">sign in</a> to start editing /{slug}.
           </p>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              const { error: resendError } = await resendVerification(email);
+              setBusy(false);
+              setResent(resendError ? resendError.message : "Sent again — check your inbox (and spam).");
+            }}
+            className="mt-4 font-mono text-xs text-gold-dim hover:text-gold disabled:opacity-50"
+          >
+            Resend confirmation email
+          </button>
+          {resent && <p className="mt-2 text-xs text-muted">{resent}</p>}
         </div>
       </div>
     );

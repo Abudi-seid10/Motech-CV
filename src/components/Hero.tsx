@@ -1,13 +1,8 @@
 import { CVData } from "@/lib/types";
 import DownloadButton from "./DownloadButton";
 
-export default function Hero({
-  personal,
-  filename,
-}: {
-  personal: CVData["personal"];
-  filename?: string;
-}) {
+export default function Hero({ data, filename }: { data: CVData; filename?: string }) {
+  const { personal } = data;
   return (
     <header className="relative overflow-hidden">
       <div className="mx-auto max-w-5xl px-6 pt-28 pb-16 md:pt-36 md:pb-24">
@@ -34,7 +29,7 @@ export default function Hero({
           )}
         </div>
 
-        <DownloadButton filename={filename} />
+        <DownloadButton data={data} filename={filename} />
       </div>
     </header>
   );

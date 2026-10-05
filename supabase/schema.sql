@@ -25,17 +25,20 @@ create table if not exists public.profiles (
 alter table public.profiles enable row level security;
 
 -- Visitors can read any profile marked public.
+drop policy if exists "Public profiles are readable by anyone" on public.profiles;
 create policy "Public profiles are readable by anyone"
   on public.profiles for select
   using (is_public = true);
 
 -- Owners can always read their own row, public or not.
+drop policy if exists "Owners can read their own profile" on public.profiles;
 create policy "Owners can read their own profile"
   on public.profiles for select
   using (auth.uid() = user_id);
 
 -- Owners can edit their own row. No insert/delete policy for regular users —
 -- profile rows are created automatically by the trigger below, one per signup.
+drop policy if exists "Owners can update their own profile" on public.profiles;
 create policy "Owners can update their own profile"
   on public.profiles for update
   using (auth.uid() = user_id)
@@ -101,6 +104,61 @@ $$;
 
 grant execute on function public.slug_available(text) to anon, authenticated;
 
+-- ===========================================================================
+-- Part 2: Contacts (built-in CRM)
+--
+-- A visitor on /card/{slug} can fill in a short form to share their contact
+-- info with the profile owner. Each submission becomes a row here; the
+-- owner reviews/manages them at /{slug}/crm.
+-- ===========================================================================
+
+create table if not exists public.contacts (
+  id          uuid primary key default gen_random_uuid(),
+  owner_id    uuid not null references auth.users(id) on delete cascade,
+  name        text not null,
+  email       text not null,
+  phone       text,
+  message     text,
+  source      text not null default 'card' check (source in ('card', 'cv')),
+  status      text not null default 'new' check (status in ('new', 'contacted', 'archived')),
+  notes       text,
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists contacts_owner_id_idx on public.contacts (owner_id, created_at desc);
+
+alter table public.contacts enable row level security;
+
+-- Anyone (including anonymous visitors) can submit the public contact form.
+-- There's no verification that owner_id refers to a real/public profile —
+-- the client always supplies it from a profile it already fetched, and a
+-- row pointing at a bogus id is simply never visible to anyone. This table
+-- has no CAPTCHA/rate-limiting; treat it as spammable by a determined bot
+-- and add one (e.g. Cloudflare Turnstile) before relying on it at scale.
+drop policy if exists "Anyone can submit a contact" on public.contacts;
+create policy "Anyone can submit a contact"
+  on public.contacts for insert
+  with check (true);
+
+-- Only the owner can see the contacts submitted to them.
+drop policy if exists "Owners can read their own contacts" on public.contacts;
+create policy "Owners can read their own contacts"
+  on public.contacts for select
+  using (auth.uid() = owner_id);
+
+-- Only the owner can update status/notes on their own contacts.
+drop policy if exists "Owners can update their own contacts" on public.contacts;
+create policy "Owners can update their own contacts"
+  on public.contacts for update
+  using (auth.uid() = owner_id)
+  with check (auth.uid() = owner_id);
+
+-- Only the owner can delete their own contacts.
+drop policy if exists "Owners can delete their own contacts" on public.contacts;
+create policy "Owners can delete their own contacts"
+  on public.contacts for delete
+  using (auth.uid() = owner_id);
+
 -- ---------------------------------------------------------------------------
 -- After running this file:
 -- Authentication → Providers → confirm Email is enabled.
@@ -114,4 +172,8 @@ grant execute on function public.slug_available(text) to anon, authenticated;
 -- `me` is reserved and NOT claimable at signup — /me and /card/me are a
 --   built-in demo rendered from bundled example data (src/data/profile.example.json),
 --   not a real account. See src/hooks/useProfile.ts.
+-- To enable the "notify by email" part of the contact form (saving the
+--   contact to the CRM always works without this), deploy the
+--   supabase/functions/send-hello Edge Function and set its RESEND_API_KEY
+--   secret — see README → "Contact form, CRM, and the hello email".
 -- ---------------------------------------------------------------------------

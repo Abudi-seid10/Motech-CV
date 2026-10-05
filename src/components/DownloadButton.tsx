@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { generatePDF } from "@/pdf/generatePDF";
+import { CVData } from "@/lib/types";
 
-export default function DownloadButton({ filename = "cv" }: { filename?: string }) {
+export default function DownloadButton({ data, filename = "cv" }: { data: CVData; filename?: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -9,7 +10,7 @@ export default function DownloadButton({ filename = "cv" }: { filename?: string 
     setBusy(true);
     setError(null);
     try {
-      await generatePDF(filename);
+      await generatePDF(data, filename);
     } catch (err) {
       setError((err as Error).message);
     } finally {

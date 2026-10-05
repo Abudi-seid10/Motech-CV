@@ -3,7 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import { useProfile } from "@/hooks/useProfile";
 import { applyTheme, DEFAULT_THEME } from "@/themes";
 import DownloadButton from "@/components/DownloadButton";
-import PrintLayout from "@/pdf/PrintLayout";
+import ContactForm from "@/components/ContactForm";
+import { downloadVCard } from "@/lib/vcard";
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -18,7 +19,7 @@ interface LinkRow {
 
 export default function CardView() {
   const { slug } = useParams<{ slug: string }>();
-  const { data, theme, isDemo, loading, notFound, error } = useProfile(slug);
+  const { data, row, theme, isDemo, loading, notFound, error } = useProfile(slug);
 
   useEffect(() => {
     applyTheme(theme);
@@ -66,6 +67,12 @@ export default function CardView() {
 
   const links: LinkRow[] = [...autoLinks.filter(Boolean), ...customLinks] as LinkRow[];
 
+  const helloHref = personal.email
+    ? `mailto:${personal.email}?subject=${encodeURIComponent(`Hi ${personal.name || ""}!`)}&body=${encodeURIComponent(
+        "Hi, I found your card and wanted to say hello —"
+      )}`
+    : null;
+
   return (
     <div className="min-h-screen flex flex-col items-center px-4 py-12 sm:py-20">
       {isDemo && (
@@ -81,7 +88,7 @@ export default function CardView() {
         <p className="font-body text-gold-soft mb-1">{card.tagline || personal.title}</p>
         {personal.location && <p className="font-mono text-xs text-muted mb-8">{personal.location}</p>}
 
-        <div className="space-y-3 mb-8">
+        <div className="space-y-3 mb-6">
           {links.map((l) => (
             <a
               key={l.href}
@@ -95,7 +102,28 @@ export default function CardView() {
           ))}
         </div>
 
-        <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <button
+            onClick={() => downloadVCard(data, slug)}
+            className="rounded-full border border-border px-4 py-2.5 font-mono text-[11px] uppercase tracking-widest2 text-bone/90 hover:border-gold/60 hover:text-gold-soft transition-colors"
+          >
+            Save Contact
+          </button>
+          {helloHref ? (
+            <a
+              href={helloHref}
+              className="rounded-full border border-border px-4 py-2.5 font-mono text-[11px] uppercase tracking-widest2 text-bone/90 hover:border-gold/60 hover:text-gold-soft transition-colors text-center"
+            >
+              Say Hello 👋
+            </a>
+          ) : (
+            <span className="rounded-full border border-border px-4 py-2.5 font-mono text-[11px] uppercase tracking-widest2 text-muted/50 text-center cursor-not-allowed">
+              Say Hello 👋
+            </span>
+          )}
+        </div>
+
+        <div className="space-y-3 mb-8">
           <Link
             to={`/${slug}`}
             className="block w-full border border-gold/50 rounded-full px-5 py-3 font-mono text-xs uppercase tracking-widest2 text-gold-soft hover:bg-gold hover:text-ink transition-colors"
@@ -103,23 +131,23 @@ export default function CardView() {
             View full CV
           </Link>
           <div className="flex justify-center">
-            <DownloadButton filename={slug} />
+            <DownloadButton data={data} filename={slug} />
           </div>
         </div>
+
+        {isDemo || !row ? (
+          <div className="card p-5 text-center mb-4">
+            <p className="font-mono text-[11px] text-muted">
+              Contact form (demo) — <Link to="/signup" className="text-gold-dim hover:text-gold underline">sign up</Link> to collect real contacts on your own card.
+            </p>
+          </div>
+        ) : (
+          <ContactForm ownerId={row.user_id} ownerEmail={row.email} ownerName={row.name} ownerSlug={slug} />
+        )}
 
         <p className="font-mono text-[11px] text-muted mt-10">
           <Link to="/signup" className="text-gold-dim hover:text-gold">Make your own card →</Link>
         </p>
-
-        {/* Off-screen — captured by the PDF export button. Absolute + a large
-            negative offset keeps it out of view without display:none or a
-            negative z-index, both of which can stop html2canvas from capturing it. */}
-        <div
-          aria-hidden="true"
-          style={{ position: "absolute", top: 0, left: "-9999px", width: "794px", pointerEvents: "none" }}
-        >
-          <PrintLayout data={data} />
-        </div>
       </div>
     </div>
   );

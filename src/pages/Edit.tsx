@@ -3,10 +3,11 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useSession } from "@/hooks/useSession";
 import { fetchOwnProfile, saveProfile, logout, ProfileRow } from "@/lib/api";
 import { CVData, emptyCVData, normalizeCVData } from "@/lib/types";
-import { THEMES, ThemeId, DEFAULT_THEME, applyTheme } from "@/themes";
+import { THEMES, ThemeId, DEFAULT_THEME } from "@/themes";
 import { AI_PROVIDERS, DEFAULT_AI_PROVIDER, AIProvider, parseResumeWithAI } from "@/lib/gemini";
 import ArrayEditor from "@/components/edit/ArrayEditor";
 import CustomSectionsEditor from "@/components/edit/CustomSectionsEditor";
+import CVPreview from "@/components/cv/CVPreview";
 
 export default function Edit() {
   const { slug } = useParams<{ slug: string }>();
@@ -22,6 +23,9 @@ export default function Edit() {
   const [importing, setImporting] = useState(false);
   const [importMsg, setImportMsg] = useState<{ text: string; error: boolean } | null>(null);
   const [aiProvider, setAiProvider] = useState<AIProvider>(DEFAULT_AI_PROVIDER);
+  // Side-by-side editor+preview is a lg+ layout; below that it's one pane at
+  // a time via this toggle, since there isn't room to show both usefully.
+  const [mobileView, setMobileView] = useState<"edit" | "preview">("edit");
 
   useEffect(() => {
     if (sessionLoading) return;
@@ -52,10 +56,10 @@ export default function Edit() {
     });
   }, [session, sessionLoading, slug, navigate]);
 
-  useEffect(() => {
-    applyTheme(theme);
-    return () => applyTheme(DEFAULT_THEME);
-  }, [theme]);
+  // Note: unlike the public pages, selecting a theme here does NOT re-theme
+  // the whole editor — only the preview pane (scoped via its own
+  // data-theme attribute below). The editor chrome stays consistent so you
+  // can compare themes without the controls around it jumping too.
 
   async function save() {
     if (!session) return;
@@ -92,7 +96,7 @@ export default function Edit() {
         const parsed = await parseResumeWithAI({ provider: aiProvider, text, current: data });
         setData(parsed);
         setImportMsg({
-          text: "AI filled in your CV below — review every section before hitting Save; nothing is saved automatically.",
+          text: "AI filled in your CV — check the preview, then review every section before hitting Save.",
           error: false,
         });
       } catch (aiErr) {
@@ -122,7 +126,7 @@ export default function Edit() {
 
   return (
     <div className="min-h-screen pb-32">
-      <header className="sticky top-0 z-10 bg-ink/90 backdrop-blur border-b border-border px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+      <header className="sticky top-0 z-20 bg-ink/90 backdrop-blur border-b border-border px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <h1 className="font-display text-xl sm:text-2xl tracking-wide truncate">Editing /{slug}</h1>
           {profile && (
@@ -134,6 +138,7 @@ export default function Edit() {
         <div className="flex items-center gap-3 sm:gap-4 font-mono text-xs">
           <Link to={`/${slug}`} className="text-muted hover:text-gold">View ↗</Link>
           <Link to={`/card/${slug}`} className="text-muted hover:text-gold">Card ↗</Link>
+          <Link to={`/${slug}/crm`} className="text-muted hover:text-gold">CRM ↗</Link>
           <button onClick={signOut} className="text-muted hover:text-gold">Sign out</button>
           <button
             onClick={save}
@@ -151,223 +156,253 @@ export default function Edit() {
         </p>
       )}
 
+      {/* Mobile-only pane switch — side-by-side only makes sense at lg+ */}
+      <div className="lg:hidden flex border-b border-border font-mono text-xs uppercase tracking-widest2">
+        <button
+          onClick={() => setMobileView("edit")}
+          className={`flex-1 py-3 text-center ${mobileView === "edit" ? "text-gold-soft border-b-2 border-gold" : "text-muted"}`}
+        >
+          Edit
+        </button>
+        <button
+          onClick={() => setMobileView("preview")}
+          className={`flex-1 py-3 text-center ${mobileView === "preview" ? "text-gold-soft border-b-2 border-gold" : "text-muted"}`}
+        >
+          Preview
+        </button>
+      </div>
+
       {profile && (
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 py-10 space-y-14">
-          <section className="card p-5">
-            <h2 className="eyebrow mb-2">Quick start</h2>
-            <p className="text-muted text-xs mb-3 leading-relaxed">
-              Upload your existing CV (PDF or Word) and an AI provider will fill in the fields
-              below — review everything before saving. If the provider isn't set up, we'll fall
-              back to pulling out your contact info only.
-            </p>
-            <div className="mb-3">
-              <label className="block font-mono text-[11px] text-muted mb-1">AI provider</label>
-              <select
-                value={aiProvider}
-                onChange={(e) => setAiProvider(e.target.value as AIProvider)}
-                disabled={importing}
-                className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm"
-              >
-                {AI_PROVIDERS.map((p) => (
-                  <option key={p.id} value={p.id}>{p.label}</option>
-                ))}
-              </select>
-            </div>
-            <input
-              type="file"
-              accept=".pdf,.docx"
-              onChange={handleResumeUpload}
-              disabled={importing}
-              className="text-xs font-mono file:mr-3 file:border file:border-gold/50 file:bg-transparent file:px-3 file:py-1.5 file:text-gold-soft file:font-mono file:text-xs file:uppercase file:tracking-widest2 hover:file:bg-gold hover:file:text-ink file:transition-colors file:cursor-pointer"
-            />
-            {importing && <p className="font-mono text-xs text-muted mt-2">Reading file…</p>}
-            {importMsg && (
-              <p className={`font-mono text-xs mt-2 ${importMsg.error ? "text-red-400" : "text-gold-soft"}`}>
-                {importMsg.text}
+        <div className="lg:grid lg:grid-cols-2 lg:items-start">
+          {/* Editor pane */}
+          <div className={`${mobileView === "preview" ? "hidden" : "block"} lg:block mx-auto max-w-3xl w-full px-4 sm:px-6 py-10 space-y-14`}>
+            <section className="card p-5">
+              <h2 className="eyebrow mb-2">Quick start</h2>
+              <p className="text-muted text-xs mb-3 leading-relaxed">
+                Upload your existing CV (PDF or Word) and an AI provider will fill in the fields
+                below — review everything in the preview before saving. If the provider isn't set
+                up, we'll fall back to pulling out your contact info only.
               </p>
-            )}
-          </section>
-
-          <section>
-            <h2 className="eyebrow mb-4">Appearance</h2>
-            <div className="grid sm:grid-cols-2 gap-4 mb-4">
-              {THEMES.map((t) => (
-                <button
-                  type="button"
-                  key={t.id}
-                  onClick={() => setTheme(t.id)}
-                  className={`card p-4 text-left transition-colors ${theme === t.id ? "border-gold" : ""}`}
+              <div className="mb-3">
+                <label className="block font-mono text-[11px] text-muted mb-1">AI provider</label>
+                <select
+                  value={aiProvider}
+                  onChange={(e) => setAiProvider(e.target.value as AIProvider)}
+                  disabled={importing}
+                  className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm"
                 >
-                  <p className="font-display text-lg tracking-wide">{t.name}</p>
-                  <p className="text-muted text-xs mt-1">{t.description}</p>
-                </button>
-              ))}
-            </div>
-            <label className="flex items-center gap-2 font-mono text-xs text-muted">
-              <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
-              Public — visible to anyone at /{slug}
-            </label>
-          </section>
-
-          <section>
-            <h2 className="eyebrow mb-1">Card (/card/{slug})</h2>
-            <p className="text-muted text-xs mb-4">
-              Your link-in-bio page — a compact version of your CV good for sharing in a social bio.
-            </p>
-            <div className="mb-4">
-              <label className="block font-mono text-[11px] text-muted mb-1">
-                Tagline (shown instead of your title, optional)
-              </label>
+                  {AI_PROVIDERS.map((p) => (
+                    <option key={p.id} value={p.id}>{p.label}</option>
+                  ))}
+                </select>
+              </div>
               <input
-                placeholder={data.personal.title || "e.g. Open to freelance work"}
-                className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm"
-                value={data.card.tagline}
-                onChange={(e) => setData({ ...data, card: { ...data.card, tagline: e.target.value } })}
+                type="file"
+                accept=".pdf,.docx"
+                onChange={handleResumeUpload}
+                disabled={importing}
+                className="text-xs font-mono file:mr-3 file:border file:border-gold/50 file:bg-transparent file:px-3 file:py-1.5 file:text-gold-soft file:font-mono file:text-xs file:uppercase file:tracking-widest2 hover:file:bg-gold hover:file:text-ink file:transition-colors file:cursor-pointer"
               />
-            </div>
-            <div className="flex flex-wrap gap-x-6 gap-y-2 mb-6 font-mono text-xs text-muted">
-              {(
-                [
-                  ["showEmail", "Show email"],
-                  ["showPhone", "Show phone"],
-                  ["showLinkedin", "Show LinkedIn"],
-                  ["showGithub", "Show GitHub"],
-                ] as const
-              ).map(([key, label]) => (
-                <label key={key} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={data.card[key]}
-                    onChange={(e) => setData({ ...data, card: { ...data.card, [key]: e.target.checked } })}
-                  />
-                  {label}
+              {importing && <p className="font-mono text-xs text-muted mt-2">Reading file…</p>}
+              {importMsg && (
+                <p className={`font-mono text-xs mt-2 ${importMsg.error ? "text-red-400" : "text-gold-soft"}`}>
+                  {importMsg.text}
+                </p>
+              )}
+            </section>
+
+            <section>
+              <h2 className="eyebrow mb-4">Appearance</h2>
+              <div className="grid sm:grid-cols-2 gap-4 mb-4">
+                {THEMES.map((t) => (
+                  <button
+                    type="button"
+                    key={t.id}
+                    onClick={() => setTheme(t.id)}
+                    className={`card p-4 text-left transition-colors ${theme === t.id ? "border-gold" : ""}`}
+                  >
+                    <p className="font-display text-lg tracking-wide">{t.name}</p>
+                    <p className="text-muted text-xs mt-1">{t.description}</p>
+                  </button>
+                ))}
+              </div>
+              <label className="flex items-center gap-2 font-mono text-xs text-muted">
+                <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
+                Public — visible to anyone at /{slug}
+              </label>
+            </section>
+
+            <section>
+              <h2 className="eyebrow mb-1">Card (/card/{slug})</h2>
+              <p className="text-muted text-xs mb-4">
+                Your link-in-bio page — a compact version of your CV good for sharing in a social bio.
+              </p>
+              <div className="mb-4">
+                <label className="block font-mono text-[11px] text-muted mb-1">
+                  Tagline (shown instead of your title, optional)
                 </label>
-              ))}
-            </div>
+                <input
+                  placeholder={data.personal.title || "e.g. Open to freelance work"}
+                  className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm"
+                  value={data.card.tagline}
+                  onChange={(e) => setData({ ...data, card: { ...data.card, tagline: e.target.value } })}
+                />
+              </div>
+              <div className="flex flex-wrap gap-x-6 gap-y-2 mb-6 font-mono text-xs text-muted">
+                {(
+                  [
+                    ["showEmail", "Show email"],
+                    ["showPhone", "Show phone"],
+                    ["showLinkedin", "Show LinkedIn"],
+                    ["showGithub", "Show GitHub"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <label key={key} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={data.card[key]}
+                      onChange={(e) => setData({ ...data, card: { ...data.card, [key]: e.target.checked } })}
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+              <ArrayEditor
+                label="Extra links"
+                items={data.card.links}
+                onChange={(links) => setData({ ...data, card: { ...data.card, links } })}
+                fields={[
+                  { key: "label", label: "Label (e.g. Portfolio, X/Twitter, Calendly)" },
+                  { key: "url", label: "URL" },
+                ]}
+                emptyItem={{ label: "", url: "" }}
+              />
+            </section>
+
+            <section>
+              <h2 className="eyebrow mb-4">Personal</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {(["name", "title", "location", "phone", "email", "linkedin", "github"] as const).map((k) => (
+                  <div key={k} className={k === "title" ? "sm:col-span-2" : ""}>
+                    <label className="block font-mono text-[11px] text-muted mb-1 capitalize">{k}</label>
+                    <input
+                      className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm"
+                      value={data.personal[k]}
+                      onChange={(e) => setData({ ...data, personal: { ...data.personal, [k]: e.target.value } })}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section>
+              <h2 className="eyebrow mb-4">Summary</h2>
+              <textarea
+                className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm min-h-[120px]"
+                value={data.summary}
+                onChange={(e) => setData({ ...data, summary: e.target.value })}
+              />
+            </section>
+
             <ArrayEditor
-              label="Extra links"
-              items={data.card.links}
-              onChange={(links) => setData({ ...data, card: { ...data.card, links } })}
+              label="Competencies"
+              items={data.competencies}
+              onChange={(items) => setData({ ...data, competencies: items })}
               fields={[
-                { key: "label", label: "Label (e.g. Portfolio, X/Twitter, Calendly)" },
-                { key: "url", label: "URL" },
+                { key: "category", label: "Category" },
+                { key: "items", label: "Items", type: "list" },
               ]}
-              emptyItem={{ label: "", url: "" }}
+              emptyItem={{ category: "", items: [] }}
             />
-          </section>
 
-          <section>
-            <h2 className="eyebrow mb-4">Personal</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {(["name", "title", "location", "phone", "email", "linkedin", "github"] as const).map((k) => (
-                <div key={k} className={k === "title" ? "sm:col-span-2" : ""}>
-                  <label className="block font-mono text-[11px] text-muted mb-1 capitalize">{k}</label>
-                  <input
-                    className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm"
-                    value={data.personal[k]}
-                    onChange={(e) => setData({ ...data, personal: { ...data.personal, [k]: e.target.value } })}
-                  />
-                </div>
-              ))}
+            <ArrayEditor
+              label="Experience"
+              items={data.experience}
+              onChange={(items) => setData({ ...data, experience: items })}
+              fields={[
+                { key: "role", label: "Role" },
+                { key: "company", label: "Company" },
+                { key: "dates", label: "Dates" },
+                { key: "location", label: "Location" },
+                { key: "bullets", label: "Bullets", type: "list" },
+              ]}
+              emptyItem={{ role: "", company: "", dates: "", location: "", bullets: [] }}
+            />
+
+            <ArrayEditor
+              label="Education"
+              items={data.education}
+              onChange={(items) => setData({ ...data, education: items })}
+              fields={[
+                { key: "school", label: "School" },
+                { key: "degree", label: "Degree" },
+                { key: "dates", label: "Dates" },
+                { key: "details", label: "Details", type: "textarea" },
+              ]}
+              emptyItem={{ school: "", degree: "", dates: "", details: "" }}
+            />
+
+            <ArrayEditor
+              label="Certifications"
+              items={data.certifications}
+              onChange={(items) => setData({ ...data, certifications: items })}
+              fields={[
+                { key: "name", label: "Name" },
+                { key: "issuer", label: "Issuer" },
+                { key: "year", label: "Year" },
+              ]}
+              emptyItem={{ name: "", issuer: "", year: "" }}
+            />
+
+            <ArrayEditor
+              label="Awards"
+              items={data.awards}
+              onChange={(items) => setData({ ...data, awards: items })}
+              fields={[
+                { key: "name", label: "Name" },
+                { key: "issuer", label: "Issuer" },
+                { key: "year", label: "Year" },
+                { key: "project", label: "Project" },
+              ]}
+              emptyItem={{ name: "", issuer: "", year: "", project: "" }}
+            />
+
+            <ArrayEditor
+              label="Languages"
+              items={data.languages}
+              onChange={(items) => setData({ ...data, languages: items })}
+              fields={[
+                { key: "name", label: "Language" },
+                { key: "level", label: "Level" },
+              ]}
+              emptyItem={{ name: "", level: "" }}
+            />
+
+            <section>
+              <h2 className="eyebrow mb-4">Strengths (one per line)</h2>
+              <textarea
+                className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm min-h-[100px]"
+                value={data.strengths.join("\n")}
+                onChange={(e) => setData({ ...data, strengths: e.target.value.split("\n") })}
+              />
+            </section>
+
+            <CustomSectionsEditor
+              sections={data.customSections}
+              onChange={(customSections) => setData({ ...data, customSections })}
+            />
+          </div>
+
+          {/* Live preview pane — themed locally via data-theme, independent
+              of the editor chrome around it. Sticky on desktop so it stays
+              in view while the (usually much longer) form scrolls. */}
+          <div className={`${mobileView === "edit" ? "hidden" : "block"} lg:block border-l border-border`}>
+            <div className="lg:sticky lg:top-[73px] lg:h-[calc(100vh-73px)] overflow-y-auto">
+              <div data-theme={theme} className="bg-ink min-h-full">
+                <CVPreview data={data} filename={slug} />
+              </div>
             </div>
-          </section>
-
-          <section>
-            <h2 className="eyebrow mb-4">Summary</h2>
-            <textarea
-              className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm min-h-[120px]"
-              value={data.summary}
-              onChange={(e) => setData({ ...data, summary: e.target.value })}
-            />
-          </section>
-
-          <ArrayEditor
-            label="Competencies"
-            items={data.competencies}
-            onChange={(items) => setData({ ...data, competencies: items })}
-            fields={[
-              { key: "category", label: "Category" },
-              { key: "items", label: "Items", type: "list" },
-            ]}
-            emptyItem={{ category: "", items: [] }}
-          />
-
-          <ArrayEditor
-            label="Experience"
-            items={data.experience}
-            onChange={(items) => setData({ ...data, experience: items })}
-            fields={[
-              { key: "role", label: "Role" },
-              { key: "company", label: "Company" },
-              { key: "dates", label: "Dates" },
-              { key: "location", label: "Location" },
-              { key: "bullets", label: "Bullets", type: "list" },
-            ]}
-            emptyItem={{ role: "", company: "", dates: "", location: "", bullets: [] }}
-          />
-
-          <ArrayEditor
-            label="Education"
-            items={data.education}
-            onChange={(items) => setData({ ...data, education: items })}
-            fields={[
-              { key: "school", label: "School" },
-              { key: "degree", label: "Degree" },
-              { key: "dates", label: "Dates" },
-              { key: "details", label: "Details", type: "textarea" },
-            ]}
-            emptyItem={{ school: "", degree: "", dates: "", details: "" }}
-          />
-
-          <ArrayEditor
-            label="Certifications"
-            items={data.certifications}
-            onChange={(items) => setData({ ...data, certifications: items })}
-            fields={[
-              { key: "name", label: "Name" },
-              { key: "issuer", label: "Issuer" },
-              { key: "year", label: "Year" },
-            ]}
-            emptyItem={{ name: "", issuer: "", year: "" }}
-          />
-
-          <ArrayEditor
-            label="Awards"
-            items={data.awards}
-            onChange={(items) => setData({ ...data, awards: items })}
-            fields={[
-              { key: "name", label: "Name" },
-              { key: "issuer", label: "Issuer" },
-              { key: "year", label: "Year" },
-              { key: "project", label: "Project" },
-            ]}
-            emptyItem={{ name: "", issuer: "", year: "", project: "" }}
-          />
-
-          <ArrayEditor
-            label="Languages"
-            items={data.languages}
-            onChange={(items) => setData({ ...data, languages: items })}
-            fields={[
-              { key: "name", label: "Language" },
-              { key: "level", label: "Level" },
-            ]}
-            emptyItem={{ name: "", level: "" }}
-          />
-
-          <section>
-            <h2 className="eyebrow mb-4">Strengths (one per line)</h2>
-            <textarea
-              className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm min-h-[100px]"
-              value={data.strengths.join("\n")}
-              onChange={(e) => setData({ ...data, strengths: e.target.value.split("\n") })}
-            />
-          </section>
-
-          <CustomSectionsEditor
-            sections={data.customSections}
-            onChange={(customSections) => setData({ ...data, customSections })}
-          />
+          </div>
         </div>
       )}
     </div>

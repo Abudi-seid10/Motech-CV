@@ -5,6 +5,7 @@ import Login from "@/pages/Login";
 import PublicCV from "@/pages/PublicCV";
 import CardView from "@/pages/CardView";
 import Edit from "@/pages/Edit";
+import CRM from "@/pages/CRM";
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/card/:slug" element={<CardView />} />
         <Route path="/:slug/edit" element={<Edit />} />
+        <Route path="/:slug/crm" element={<CRM />} />
         <Route path="/:slug" element={<PublicCV />} />
       </Routes>
     </BrowserRouter>
