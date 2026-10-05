@@ -160,6 +160,74 @@ create policy "Owners can delete their own contacts"
   using (auth.uid() = owner_id);
 
 -- ---------------------------------------------------------------------------
+-- Contact limits per plan (enforced here, in the database, so they can't be
+-- bypassed from the browser):
+--   free (Starter) = 10 contacts, basic = 100, pro = unlimited.
+-- Counts every stored contact (including archived) — deleting contacts frees
+-- up room. The insert is rejected with the message 'contact_limit_reached',
+-- which src/lib/contacts.ts turns into a friendly error.
+-- ---------------------------------------------------------------------------
+create or replace function public.contact_limit_for(owner uuid)
+returns int
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select case (select plan from public.profiles where user_id = owner)
+    when 'pro' then null
+    when 'basic' then 100
+    else 10
+  end;
+$$;
+
+create or replace function public.enforce_contact_limit()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  lim int;
+begin
+  -- Serialize concurrent submissions for the same owner so two at once can't both slip under the limit.
+  perform pg_advisory_xact_lock(hashtext(new.owner_id::text));
+  lim := public.contact_limit_for(new.owner_id);
+  if lim is not null
+     and (select count(*) from public.contacts where owner_id = new.owner_id) >= lim then
+    raise exception 'contact_limit_reached' using errcode = 'P0001';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists contacts_enforce_limit on public.contacts;
+create trigger contacts_enforce_limit
+  before insert on public.contacts
+  for each row execute function public.enforce_contact_limit();
+
+-- The limit depends on profiles.plan, and the "Owners can update their own
+-- profile" policy would otherwise let anyone set plan = 'pro' from the
+-- browser. Signed-in users (auth.uid() is not null) can't change it; change a
+-- plan from the Supabase dashboard / SQL editor / a service-role function.
+create or replace function public.protect_profile_plan()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.plan is distinct from old.plan and auth.uid() is not null then
+    new.plan := old.plan;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_protect_plan on public.profiles;
+create trigger profiles_protect_plan
+  before update on public.profiles
+  for each row execute function public.protect_profile_plan();
+
+-- ---------------------------------------------------------------------------
 -- After running this file:
 -- Authentication → Providers → confirm Email is enabled.
 -- Authentication → Settings → "Confirm email": if ON, new users must click a

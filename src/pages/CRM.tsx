@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useSession } from "@/hooks/useSession";
-import { fetchOwnProfile } from "@/lib/api";
+import { fetchOwnProfile, Plan } from "@/lib/api";
+import { PLANS, contactLimitFor, canExportContacts } from "@/lib/plans";
+import { exportContactsCSV, exportContactsVCard } from "@/lib/exportContacts";
 import { ContactRow, ContactStatus, fetchOwnContacts, updateContactStatus, deleteContact } from "@/lib/contacts";
 
 const STATUS_LABEL: Record<ContactStatus, string> = {
@@ -17,6 +19,7 @@ export default function CRM() {
 
   const [contacts, setContacts] = useState<ContactRow[] | null>(null);
   const [filter, setFilter] = useState<ContactStatus | "all">("all");
+  const [plan, setPlan] = useState<Plan>("free");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -35,6 +38,7 @@ export default function CRM() {
         setError(`You're signed in as /${row?.slug ?? "?"} — sign out to view /${slug}'s CRM.`);
         return;
       }
+      setPlan(row.plan);
       fetchOwnContacts(session.user.id).then(({ data: rows, error: contactsError }) => {
         if (contactsError) {
           setError(contactsError.message);
@@ -67,6 +71,11 @@ export default function CRM() {
     return <div className="min-h-screen grid place-items-center font-mono text-sm text-muted">Loading…</div>;
   }
 
+  const limit = contactLimitFor(plan);
+  const planName = PLANS.find((p) => p.id === plan)?.name ?? "Starter";
+  const used = contacts?.length ?? 0;
+  const full = limit !== null && used >= limit;
+  const canExport = canExportContacts(plan);
   const visible = (contacts ?? []).filter((c) => filter === "all" || c.status === filter);
   const counts = {
     all: contacts?.length ?? 0,
@@ -93,6 +102,52 @@ export default function CRM() {
             People who shared their contact info on your{" "}
             <Link to={`/card/${slug}`} className="text-gold-dim hover:text-gold">card</Link> show up here.
           </p>
+
+          {limit !== null && (
+            <div className="card p-4 mb-6">
+              <div className="flex items-baseline justify-between font-mono text-xs mb-2">
+                <span className="text-muted">{planName} plan</span>
+                <span className={full ? "text-red-400" : "text-gold-soft"}>
+                  {used} / {limit} contacts
+                </span>
+              </div>
+              <div className="h-1.5 bg-raised rounded-full overflow-hidden">
+                <div className={`h-full ${full ? "bg-red-400" : "bg-gold"}`} style={{ width: `${Math.min(100, (used / limit) * 100)}%` }} />
+              </div>
+              {full ? (
+                <p className="text-xs text-red-400 mt-3 leading-relaxed">
+                  Your CRM is full — new visitors can't send you their details until you delete some contacts
+                  or upgrade your plan.
+                </p>
+              ) : (
+                used >= limit * 0.8 && (
+                  <p className="text-xs text-muted mt-3">You're close to your limit. Delete old contacts to make room.</p>
+                )
+              )}
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center gap-2 mb-3 font-mono text-xs">
+            <span className="text-muted uppercase tracking-widest2 mr-1">Export</span>
+            {(
+              [
+                ["CSV", exportContactsCSV],
+                ["vCard", exportContactsVCard],
+              ] as const
+            ).map(([label, run]) => (
+              <button
+                key={label}
+                disabled={!canExport || visible.length === 0}
+                onClick={() => run(visible, slug ?? "contacts")}
+                title={canExport ? `Download ${visible.length} contact(s)` : "Available on Basic and Pro"}
+                className="border border-gold/50 px-3 py-1.5 rounded-full uppercase tracking-widest2 text-gold-soft hover:bg-gold hover:text-ink transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-gold-soft"
+              >
+                {label}
+              </button>
+            ))}
+            {!canExport && <span className="text-muted">Upgrade to Basic or Pro to export.</span>}
+            {canExport && <span className="text-muted">Exports the contacts in the current filter ({visible.length}).</span>}
+          </div>
 
           <div className="flex flex-wrap gap-2 mb-6 font-mono text-xs">
             {(["all", "new", "contacted", "archived"] as const).map((f) => (

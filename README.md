@@ -15,7 +15,7 @@ It is a client-side React application backed by Supabase. There is no custom ser
 - Save a visitor's contact to their phone with one tap (vCard) from the card page.
 - A one-tap "Say Hello" email to the owner from the card page.
 - A public "share your contact" form on the card page that feeds directly into a built-in CRM at `/<slug>/crm`, with an optional email notification.
-- Import a PDF or DOCX résumé with optional AI assistance (Gemini, OpenAI, Ollama, or OpenRouter), with an offline contact-information fallback.
+- Import an existing CV (PDF, DOCX, or a PNG/JPG photo or scan) — OCR reads it in the browser and fills in the editor, no API keys needed.
 - Use the built-in `/me` and `/card/me` demo without configuring a database.
 - Deploy as a static SPA on Vercel, Netlify, Cloudflare Pages, or another Vite-compatible host.
 
@@ -91,28 +91,15 @@ npm run preview
 
 The build runs TypeScript checking followed by the Vite production build.
 
-## AI Resume Import
+## CV Import (OCR)
 
-The editor's **Quick start** panel accepts PDF and DOCX files. AI parsing is optional and runs directly from the browser using the provider selected in the editor; the result lands in the live preview pane immediately for review.
+The editor's **Quick start** panel accepts PDF, DOCX, and image files (PNG, JPG, WebP). Everything runs in the browser and no API key is required:
 
-| Provider | Environment variables | Notes |
-| --- | --- | --- |
-| Google Gemini | `VITE_GEMINI_API_KEY` | Default provider; free tier available |
-| OpenAI | `VITE_OPENAI_API_KEY`, optional `VITE_OPENAI_MODEL` | Defaults to `gpt-4o-mini` |
-| Ollama | Optional `VITE_OLLAMA_BASE_URL`, `VITE_OLLAMA_MODEL` | Local model; defaults to `http://localhost:11434` and `llama3.2` |
-| OpenRouter | `VITE_OPENROUTER_API_KEY`, optional `VITE_OPENROUTER_MODEL` | Defaults to `openai/gpt-oss-20b:free` |
+- PDFs with selectable text are read directly. PDFs without a text layer (scans) are rendered page by page and read with [tesseract.js](https://github.com/naptha/tesseract.js) OCR (first four pages).
+- Images are upscaled if needed and run through OCR.
+- The extracted text is parsed by rules in [`src/lib/parseResume.ts`](src/lib/parseResume.ts): it finds section headings (Summary, Experience, Education, Skills, Certifications, Awards, Languages, plus extras like Projects) and fills contact info, jobs, education, skills and more. Sections it doesn't find are left as they were.
 
-If no provider is configured, the app falls back to extracting contact details and placing the source text in the summary so importing a résumé is still useful.
-
-### Important key security note
-
-Any `VITE_*` variable is bundled into browser JavaScript. Visitors can inspect these values. Do not use personal or production API keys in a public multi-user deployment. For a public deployment, leave AI keys unset, use strict provider quotas, use Ollama locally, or move provider calls behind a server-side function.
-
-For Ollama, allow the app origin when starting the server:
-
-```bash
-OLLAMA_ORIGINS="http://localhost:5173,https://your-domain.com" ollama serve
-```
+Parsing is heuristic — layouts vary a lot — so review the live preview before saving. OCR is English-only, and the first scan downloads the OCR engine and language data from a CDN (cached afterwards).
 
 ## Themes
 
@@ -205,7 +192,7 @@ src/
     edit/             ArrayEditor and CustomSectionsEditor — generic editor building blocks
   data/               Built-in demo profile
   hooks/              Supabase profile and session state
-  lib/                API, types, parsing, AI providers, vCard, contacts/CRM, and utilities
+  lib/                API, types, CV parsing + OCR, vCard, contacts/CRM, and utilities
   pages/              Home, auth, editor, CRM, CV, and card routes
   pdf/                ResumeDocument (the PDF layout) and generatePDF
   themes/             Theme registry and theme IDs

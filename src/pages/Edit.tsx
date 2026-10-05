@@ -5,7 +5,7 @@ import { fetchOwnProfile, saveProfile, logout, ProfileRow } from "@/lib/api";
 import { CVData, emptyCVData, normalizeCVData } from "@/lib/types";
 import { THEMES, ThemeId, DEFAULT_THEME, LAYOUTS, layoutOf } from "@/themes";
 import { fileToPhotoDataUrl } from "@/lib/photo";
-import { AI_PROVIDERS, DEFAULT_AI_PROVIDER, AIProvider, parseResumeWithAI } from "@/lib/gemini";
+import { SUPPORTED_ACCEPT } from "@/lib/parseResume";
 import ArrayEditor from "@/components/edit/ArrayEditor";
 import CustomSectionsEditor from "@/components/edit/CustomSectionsEditor";
 import CVPreview from "@/components/cv/CVPreview";
@@ -22,8 +22,8 @@ export default function Edit() {
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [statusMsg, setStatusMsg] = useState("");
   const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState<string | null>(null);
   const [importMsg, setImportMsg] = useState<{ text: string; error: boolean } | null>(null);
-  const [aiProvider, setAiProvider] = useState<AIProvider>(DEFAULT_AI_PROVIDER);
   // Side-by-side editor+preview is a lg+ layout; below that it's one pane at
   // a time via this toggle, since there isn't room to show both usefully.
   const [mobileView, setMobileView] = useState<"edit" | "preview">("edit");
@@ -88,36 +88,26 @@ export default function Edit() {
     setImporting(true);
     setImportMsg(null);
     try {
-      // Loaded on demand — pdfjs-dist/mammoth are ~1.5MB and shouldn't bloat
-      // every page's initial load for a feature most visits never touch.
-      const { extractTextFromFile, parseResumeText } = await import("@/lib/parseResume");
-      const text = await extractTextFromFile(file);
-
-      try {
-        const parsed = await parseResumeWithAI({ provider: aiProvider, text, current: data });
-        setData(parsed);
-        setImportMsg({
-          text: "AI filled in your CV — check the preview, then review every section before hitting Save.",
-          error: false,
-        });
-      } catch (aiErr) {
-        // AI parsing failed (no key, offline, bad response, etc.) — fall back
-        // to the offline regex extraction so the upload isn't a dead end.
-        const fallback = parseResumeText(text);
-        setData((prev) => ({
-          ...prev,
-          personal: { ...prev.personal, ...fallback.personal },
-          summary: fallback.summary || prev.summary,
-        }));
-        setImportMsg({
-          text: `${(aiErr as Error).message} Pulled your contact info instead — you'll need to fill in the rest manually.`,
-          error: true,
-        });
+      // Loaded on demand — pdfjs-dist, mammoth and the OCR engine are large
+      // and shouldn't bloat every page's initial load.
+      const { extractTextFromFile, parseResumeText, applyParsed, summarizeParsed } = await import("@/lib/parseResume");
+      const text = await extractTextFromFile(file, (m) => setImportProgress(m));
+      if (text.replace(/\s/g, "").length < 20) {
+        throw new Error("Couldn't find any text in that file. Try a sharper scan or photo.");
       }
+      const parsed = parseResumeText(text);
+      const found = summarizeParsed(parsed);
+      if (!found) throw new Error("Read the file but couldn't recognise any CV sections in it.");
+      setData((prev) => applyParsed(prev, parsed));
+      setImportMsg({
+        text: `${found} Check the preview and fix anything that's off before saving.`,
+        error: false,
+      });
     } catch (err) {
       setImportMsg({ text: (err as Error).message, error: true });
     } finally {
       setImporting(false);
+      setImportProgress(null);
     }
   }
 
@@ -180,31 +170,18 @@ export default function Edit() {
             <section className="card p-5">
               <h2 className="eyebrow mb-2">Quick start</h2>
               <p className="text-muted text-xs mb-3 leading-relaxed">
-                Upload your existing CV (PDF or Word) and an AI provider will fill in the fields
-                below — review everything in the preview before saving. If the provider isn't set
-                up, we'll fall back to pulling out your contact info only.
+                Upload your existing CV — a PDF, Word file, or a photo/scan (PNG, JPG) — and we'll
+                read it with OCR and fill in the fields below. Everything runs in your browser;
+                the file never leaves your device. Review the preview before saving.
               </p>
-              <div className="mb-3">
-                <label className="block font-mono text-[11px] text-muted mb-1">AI provider</label>
-                <select
-                  value={aiProvider}
-                  onChange={(e) => setAiProvider(e.target.value as AIProvider)}
-                  disabled={importing}
-                  className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm"
-                >
-                  {AI_PROVIDERS.map((p) => (
-                    <option key={p.id} value={p.id}>{p.label}</option>
-                  ))}
-                </select>
-              </div>
               <input
                 type="file"
-                accept=".pdf,.docx"
+                accept={SUPPORTED_ACCEPT}
                 onChange={handleResumeUpload}
                 disabled={importing}
                 className="text-xs font-mono file:mr-3 file:border file:border-gold/50 file:bg-transparent file:px-3 file:py-1.5 file:text-gold-soft file:font-mono file:text-xs file:uppercase file:tracking-widest2 hover:file:bg-gold hover:file:text-ink file:transition-colors file:cursor-pointer"
               />
-              {importing && <p className="font-mono text-xs text-muted mt-2">Reading file…</p>}
+              {importing && <p className="font-mono text-xs text-muted mt-2">{importProgress ?? "Reading file…"}</p>}
               {importMsg && (
                 <p className={`font-mono text-xs mt-2 ${importMsg.error ? "text-red-400" : "text-gold-soft"}`}>
                   {importMsg.text}

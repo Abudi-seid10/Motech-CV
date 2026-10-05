@@ -50,7 +50,13 @@ export async function submitContact(input: SubmitContactInput) {
       source: input.source ?? "card",
     });
 
-  if (error) throw error;
+  if (error) {
+    // Raised by the enforce_contact_limit trigger — the owner's plan is full.
+    if (error.message.includes("contact_limit_reached")) {
+      throw new Error("This person isn't accepting new contacts right now. Try reaching them another way.");
+    }
+    throw error;
+  }
 
   if (input.ownerEmail) {
     try {
