@@ -1,3 +1,5 @@
+import type { LayoutId } from "@/lib/types";
+
 export type ThemeId = "editorial-gold" | "minimal-mono" | "coastal-cyan" | "forest-lime" | "terracotta-ink";
 
 export interface Theme {
@@ -43,4 +45,27 @@ export function isThemeId(value: string): value is ThemeId {
 /** Applies a theme by setting data-theme on <html> — see CSS vars in src/index.css */
 export function applyTheme(theme: ThemeId) {
   document.documentElement.dataset.theme = theme;
+}
+
+export interface LayoutOption {
+  id: LayoutId;
+  name: string;
+  description: string;
+  /** Whether the layout has a slot for a profile photo. */
+  photo: boolean;
+}
+
+/** CV formats — the page structure, independent of the color theme above. */
+export const LAYOUTS: LayoutOption[] = [
+  { id: "editorial", name: "Editorial", description: "The original themed long-scroll page. PDF is plain and ATS-friendly.", photo: false },
+  { id: "classic", name: "Classic", description: "Centered name, ruled sections, black on white.", photo: false },
+  { id: "profile", name: "Profile", description: "Round photo and personal data on the left, content on the right.", photo: true },
+  { id: "teal", name: "Teal Ribbon", description: "Dark teal sidebar, gold pill headings, photo header.", photo: true },
+  { id: "navy", name: "Navy Timeline", description: "Navy sidebar with photo and a timeline for experience.", photo: true },
+];
+
+export const DEFAULT_LAYOUT: LayoutId = "editorial";
+
+export function layoutOf(data: { layout?: LayoutId }): LayoutId {
+  return data.layout && LAYOUTS.some((l) => l.id === data.layout) ? data.layout : DEFAULT_LAYOUT;
 }

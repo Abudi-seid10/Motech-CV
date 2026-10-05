@@ -2,7 +2,18 @@ import { useState } from "react";
 import { generatePDF } from "@/pdf/generatePDF";
 import { CVData } from "@/lib/types";
 
-export default function DownloadButton({ data, filename = "cv" }: { data: CVData; filename?: string }) {
+const DEFAULT_CLASS =
+  "group inline-flex items-center justify-center gap-3 rounded-full border border-gold/50 px-6 py-3 font-mono text-xs uppercase tracking-widest2 text-gold-soft hover:bg-gold hover:text-ink transition-colors disabled:opacity-50 disabled:cursor-wait";
+
+export default function DownloadButton({
+  data,
+  filename = "cv",
+  className = DEFAULT_CLASS,
+}: {
+  data: CVData;
+  filename?: string;
+  className?: string;
+}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,7 +34,7 @@ export default function DownloadButton({ data, filename = "cv" }: { data: CVData
       <button
         onClick={handleClick}
         disabled={busy}
-        className="group inline-flex items-center justify-center gap-3 rounded-full border border-gold/50 px-6 py-3 font-mono text-xs uppercase tracking-widest2 text-gold-soft hover:bg-gold hover:text-ink transition-colors disabled:opacity-50 disabled:cursor-wait"
+        className={className}
       >
         {busy ? "Preparing PDF…" : "Download CV — PDF"}
         <span className="transition-transform group-hover:translate-y-0.5">↓</span>

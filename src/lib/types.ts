@@ -1,3 +1,5 @@
+export type LayoutId = "editorial" | "classic" | "profile" | "teal" | "navy";
+
 export interface Personal {
   name: string;
   title: string;
@@ -6,6 +8,8 @@ export interface Personal {
   email: string;
   linkedin: string;
   github: string;
+  /** Square JPEG data URL (see lib/photo.ts); only the layouts with a photo slot use it. */
+  photo?: string;
 }
 
 export interface CompetencyGroup {
@@ -90,6 +94,8 @@ export interface CVData {
   customSections: CustomSection[];
   /** Customization for the /card/{slug} link-in-bio page */
   card: CardSettings;
+  /** CV format for the public page + PDF. Missing = "editorial" (the original look). */
+  layout?: LayoutId;
 }
 
 export interface ProfileRow {

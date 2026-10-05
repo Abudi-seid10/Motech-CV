@@ -3,7 +3,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useSession } from "@/hooks/useSession";
 import { fetchOwnProfile, saveProfile, logout, ProfileRow } from "@/lib/api";
 import { CVData, emptyCVData, normalizeCVData } from "@/lib/types";
-import { THEMES, ThemeId, DEFAULT_THEME } from "@/themes";
+import { THEMES, ThemeId, DEFAULT_THEME, LAYOUTS, layoutOf } from "@/themes";
+import { fileToPhotoDataUrl } from "@/lib/photo";
 import { AI_PROVIDERS, DEFAULT_AI_PROVIDER, AIProvider, parseResumeWithAI } from "@/lib/gemini";
 import ArrayEditor from "@/components/edit/ArrayEditor";
 import CustomSectionsEditor from "@/components/edit/CustomSectionsEditor";
@@ -212,7 +213,22 @@ export default function Edit() {
             </section>
 
             <section>
-              <h2 className="eyebrow mb-4">Appearance</h2>
+              <h2 className="eyebrow mb-4">CV format</h2>
+              <div className="grid sm:grid-cols-2 gap-4 mb-6">
+                {LAYOUTS.map((l) => (
+                  <button
+                    type="button"
+                    key={l.id}
+                    onClick={() => setData({ ...data, layout: l.id })}
+                    className={`card p-4 text-left transition-colors ${layoutOf(data) === l.id ? "border-gold" : ""}`}
+                  >
+                    <p className="font-display text-lg tracking-wide">{l.name}</p>
+                    <p className="text-muted text-xs mt-1">{l.description}</p>
+                    {l.photo && <p className="font-mono text-[10px] text-gold-dim mt-2">Uses your photo</p>}
+                  </button>
+                ))}
+              </div>
+              <h2 className="eyebrow mb-4">Color theme (Editorial format)</h2>
               <div className="grid sm:grid-cols-2 gap-4 mb-4">
                 {THEMES.map((t) => (
                   <button
@@ -281,6 +297,41 @@ export default function Edit() {
 
             <section>
               <h2 className="eyebrow mb-4">Personal</h2>
+              <div className="flex items-center gap-4 mb-4">
+                {data.personal.photo ? (
+                  <img src={data.personal.photo} alt="" className="w-16 h-16 rounded-full object-cover border border-border" />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-raised border border-border" />
+                )}
+                <div>
+                  <label className="block font-mono text-[11px] text-muted mb-1">Photo (used by Profile, Teal Ribbon and Navy Timeline)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="text-xs font-mono file:mr-3 file:border file:border-gold/50 file:bg-transparent file:px-3 file:py-1.5 file:text-gold-soft file:font-mono file:text-xs file:uppercase file:tracking-widest2 hover:file:bg-gold hover:file:text-ink file:transition-colors file:cursor-pointer"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      e.target.value = "";
+                      if (!file) return;
+                      try {
+                        const photo = await fileToPhotoDataUrl(file);
+                        setData((prev) => ({ ...prev, personal: { ...prev.personal, photo } }));
+                      } catch (err) {
+                        setImportMsg({ text: (err as Error).message, error: true });
+                      }
+                    }}
+                  />
+                  {data.personal.photo && (
+                    <button
+                      type="button"
+                      className="font-mono text-[11px] text-muted hover:text-gold mt-1 block"
+                      onClick={() => setData({ ...data, personal: { ...data.personal, photo: "" } })}
+                    >
+                      Remove photo
+                    </button>
+                  )}
+                </div>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {(["name", "title", "location", "phone", "email", "linkedin", "github"] as const).map((k) => (
                   <div key={k} className={k === "title" ? "sm:col-span-2" : ""}>

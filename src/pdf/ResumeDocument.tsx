@@ -1,5 +1,7 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import { CVData } from "@/lib/types";
+import { layoutOf } from "@/themes";
+import { ClassicDocument, ProfileDocument, TealDocument, NavyDocument } from "./layouts";
 
 /**
  * Deliberately plain and theme-independent: this is what gets parsed by an
@@ -81,7 +83,7 @@ function Bullets({ items }: { items?: string[] }) {
   );
 }
 
-export default function ResumeDocument({ data }: { data: CVData }) {
+function PlainResume({ data }: { data: CVData }) {
   const { personal } = data;
 
   return (
@@ -208,4 +210,20 @@ export default function ResumeDocument({ data }: { data: CVData }) {
       </Page>
     </Document>
   );
+}
+
+/** Picks the PDF that matches the CV's chosen layout (Editorial → the plain ATS-friendly one). */
+export default function ResumeDocument({ data }: { data: CVData }) {
+  switch (layoutOf(data)) {
+    case "classic":
+      return <ClassicDocument data={data} />;
+    case "profile":
+      return <ProfileDocument data={data} />;
+    case "teal":
+      return <TealDocument data={data} />;
+    case "navy":
+      return <NavyDocument data={data} />;
+    default:
+      return <PlainResume data={data} />;
+  }
 }
