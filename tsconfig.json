@@ -14,7 +14,7 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
-    "baseUrl": "motech-cv.vercel.app/",
+    "baseUrl": ".",
     "paths": { "@/*": ["src/*"] }
   },
   "include": ["src"]
