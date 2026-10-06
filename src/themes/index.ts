@@ -62,6 +62,9 @@ export const LAYOUTS: LayoutOption[] = [
   { id: "profile", name: "Profile", description: "Round photo and personal data on the left, content on the right.", photo: true },
   { id: "teal", name: "Teal Ribbon", description: "Dark teal sidebar, gold pill headings, photo header.", photo: true },
   { id: "navy", name: "Navy Timeline", description: "Navy sidebar with photo and a timeline for experience.", photo: true },
+  { id: "modern", name: "Modern Band", description: "Indigo header band, accent headings, pill-style skills.", photo: false },
+  { id: "executive", name: "Executive", description: "Serif type, centered header, ruled sections with a label column.", photo: false },
+  { id: "creative", name: "Creative", description: "Dark photo header, coral accents, content plus a tinted sidebar.", photo: true },
 ];
 
 export const DEFAULT_LAYOUT: LayoutId = "editorial";

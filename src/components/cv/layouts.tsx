@@ -10,9 +10,9 @@ import DownloadButton from "@/components/DownloadButton";
 
 type Props = { data: CVData; filename?: string };
 
-const bare = (u: string) => u.replace(/^https?:\/\//, "");
+export const bare = (u: string) => u.replace(/^https?:\/\//, "");
 
-function Icon({ d, className = "w-4 h-4" }: { d: string[]; className?: string }) {
+export function Icon({ d, className = "w-4 h-4" }: { d: string[]; className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
       {d.map((p, i) => (
@@ -21,14 +21,14 @@ function Icon({ d, className = "w-4 h-4" }: { d: string[]; className?: string })
     </svg>
   );
 }
-const ICONS = {
+export const ICONS = {
   phone: ["M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"],
   mail: ["M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z", "M22 6l-10 7L2 6"],
   pin: ["M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z", "M12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"],
   link: ["M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71", "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"],
 };
 
-function contacts(p: Personal) {
+export function contacts(p: Personal) {
   return [
     p.phone && { icon: ICONS.phone, text: p.phone },
     p.email && { icon: ICONS.mail, text: p.email },
@@ -38,14 +38,14 @@ function contacts(p: Personal) {
   ].filter(Boolean) as { icon: string[]; text: string }[];
 }
 
-const skillItems = (d: CVData) => d.competencies.flatMap((g) => g.items).filter(Boolean);
+export const skillItems = (d: CVData) => d.competencies.flatMap((g) => g.items).filter(Boolean);
 
-function Photo({ src, className }: { src?: string; className: string }) {
+export function Photo({ src, className }: { src?: string; className: string }) {
   if (!src) return <div className={`${className} bg-neutral-300`} aria-hidden />;
   return <img src={src} alt="" className={`${className} object-cover`} />;
 }
 
-function Dot({ items, className }: { items: string[]; className?: string }) {
+export function Dot({ items, className }: { items: string[]; className?: string }) {
   if (!items.length) return null;
   return (
     <ul className={`list-disc pl-5 space-y-1 ${className ?? ""}`}>
@@ -56,7 +56,7 @@ function Dot({ items, className }: { items: string[]; className?: string }) {
   );
 }
 
-function Download({ data, filename, className }: Props & { className: string }) {
+export function Download({ data, filename, className }: Props & { className: string }) {
   return (
     <div className="mt-8 print:hidden">
       <DownloadButton data={data} filename={filename} className={className} />
@@ -65,11 +65,11 @@ function Download({ data, filename, className }: Props & { className: string }) 
 }
 
 /** Gray stage + white paper, shared by all alternative layouts. */
-function Stage({ children }: { children: ReactNode }) {
+export function Stage({ children }: { children: ReactNode }) {
   return <div className="bg-neutral-200 py-6 sm:py-10 px-2 sm:px-6">{children}</div>;
 }
 
-const customWith = (d: CVData, render: (title: string, body: ReactNode, key: string) => ReactNode) =>
+export const customWith = (d: CVData, render: (title: string, body: ReactNode, key: string) => ReactNode) =>
   d.customSections
     .filter((s) => s.entries.length > 0)
     .map((s) =>
@@ -90,7 +90,7 @@ const customWith = (d: CVData, render: (title: string, body: ReactNode, key: str
       )
     );
 
-const certLines = (d: CVData) =>
+export const certLines = (d: CVData) =>
   d.certifications.map((c, i) => (
     <p key={i}>
       <b>{c.name}</b>
@@ -99,7 +99,7 @@ const certLines = (d: CVData) =>
     </p>
   ));
 
-const awardLines = (d: CVData) =>
+export const awardLines = (d: CVData) =>
   d.awards.map((a, i) => (
     <p key={i}>
       <b>{a.name}</b>

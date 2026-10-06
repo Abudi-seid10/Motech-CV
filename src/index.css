@@ -121,7 +121,19 @@
     @apply font-display text-6xl text-gold/20 leading-none;
   }
   .card {
-    @apply border border-border bg-surface/60 backdrop-blur-sm rounded-sm;
+    @apply border border-border bg-surface/60 backdrop-blur-sm rounded-xl;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-gold/60 px-6 py-3 font-mono text-xs uppercase tracking-widest2 text-gold-soft transition-colors hover:bg-gold hover:text-ink disabled:opacity-50;
+  }
+  .btn-solid {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-gold bg-gold px-6 py-3 font-mono text-xs uppercase tracking-widest2 text-ink transition-opacity hover:opacity-90 disabled:opacity-50;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-border px-6 py-3 font-mono text-xs uppercase tracking-widest2 text-muted transition-colors hover:border-gold/50 hover:text-gold;
+  }
+  .input {
+    @apply w-full rounded-lg border border-border bg-raised px-3 py-2.5 text-sm outline-none transition-colors focus:border-gold/70;
   }
 }
 

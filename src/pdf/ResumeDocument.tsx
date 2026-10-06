@@ -1,6 +1,7 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import { CVData } from "@/lib/types";
 import { layoutOf } from "@/themes";
+import { ModernDocument, ExecutiveDocument, CreativeDocument } from "./layouts2";
 import { ClassicDocument, ProfileDocument, TealDocument, NavyDocument } from "./layouts";
 
 /**
@@ -223,6 +224,12 @@ export default function ResumeDocument({ data }: { data: CVData }) {
       return <TealDocument data={data} />;
     case "navy":
       return <NavyDocument data={data} />;
+    case "modern":
+      return <ModernDocument data={data} />;
+    case "executive":
+      return <ExecutiveDocument data={data} />;
+    case "creative":
+      return <CreativeDocument data={data} />;
     default:
       return <PlainResume data={data} />;
   }

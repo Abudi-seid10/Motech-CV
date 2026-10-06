@@ -74,7 +74,7 @@ export default function ArrayEditor<T extends object>({
                   <div key={String(f.key)}>
                     <label className="block font-mono text-[11px] text-muted mb-1">{f.label} (one per line)</label>
                     <textarea
-                      className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm text-bone min-h-[90px]"
+                      className="input text-bone min-h-[90px]"
                       value={value}
                       onChange={(e) => update(i, f.key, e.target.value.split("\n"))}
                     />
@@ -86,13 +86,13 @@ export default function ArrayEditor<T extends object>({
                   <label className="block font-mono text-[11px] text-muted mb-1">{f.label}</label>
                   {f.type === "textarea" ? (
                     <textarea
-                      className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm text-bone min-h-[70px]"
+                      className="input text-bone min-h-[70px]"
                       value={(raw as string) ?? ""}
                       onChange={(e) => update(i, f.key, e.target.value)}
                     />
                   ) : (
                     <input
-                      className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm text-bone"
+                      className="input text-bone"
                       value={(raw as string) ?? ""}
                       onChange={(e) => update(i, f.key, e.target.value)}
                     />

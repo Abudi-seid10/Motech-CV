@@ -9,6 +9,7 @@ import Awards from "@/components/Awards";
 import Languages from "@/components/Languages";
 import CustomSections from "@/components/CustomSections";
 import { layoutOf } from "@/themes";
+import { ModernLayout, ExecutiveLayout, CreativeLayout } from "./layouts2";
 import { ClassicLayout, ProfileLayout, TealLayout, NavyLayout } from "./layouts";
 
 /**
@@ -25,6 +26,12 @@ export default function CVPreview({ data, filename }: { data: CVData; filename?:
       return <TealLayout data={data} filename={filename} />;
     case "navy":
       return <NavyLayout data={data} filename={filename} />;
+    case "modern":
+      return <ModernLayout data={data} filename={filename} />;
+    case "executive":
+      return <ExecutiveLayout data={data} filename={filename} />;
+    case "creative":
+      return <CreativeLayout data={data} filename={filename} />;
   }
   return (
     <>

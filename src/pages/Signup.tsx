@@ -1,5 +1,7 @@
+import SiteHeader, { navLink } from "@/components/brand/SiteHeader";
+import SiteFooter from "@/components/brand/SiteFooter";
 import { FormEvent, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { signup, checkSlugAvailable, resendVerification } from "@/lib/api";
 import { slugifyClient } from "@/lib/slug";
 import { isValidSlugFormat, RESERVED_SLUGS } from "@/lib/reserved-slugs";
@@ -62,7 +64,11 @@ export default function Signup() {
 
   if (checkEmail) {
     return (
-      <div className="min-h-screen grid place-items-center px-6 text-center">
+    <div className="min-h-screen flex flex-col">
+      <SiteHeader>
+        <Link to="/login" className={navLink}>Log in</Link>
+      </SiteHeader>
+      <main className="flex-1 grid place-items-center px-6 py-12 text-center">
         <div className="max-w-sm">
           <h1 className="font-display text-3xl mb-3">Check your email</h1>
           <p className="text-muted text-sm">
@@ -84,12 +90,18 @@ export default function Signup() {
           </button>
           {resent && <p className="mt-2 text-xs text-muted">{resent}</p>}
         </div>
-      </div>
+      </main>
+      <SiteFooter />
+    </div>
     );
   }
 
   return (
-    <div className="min-h-screen grid place-items-center px-6 py-16">
+    <div className="min-h-screen flex flex-col">
+      <SiteHeader>
+        <Link to="/login" className={navLink}>Log in</Link>
+      </SiteHeader>
+      <main className="flex-1 grid place-items-center px-6 py-12 ">
       <form onSubmit={handleSubmit} className="w-full max-w-sm card p-6 sm:p-8">
         <h1 className="font-display text-3xl mb-1">Build your CV</h1>
         <p className="font-mono text-xs text-muted mb-6">Free, editable, downloadable</p>
@@ -99,7 +111,7 @@ export default function Signup() {
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm mb-4"
+          className="input mb-4"
         />
 
         <label className="block font-mono text-[11px] text-muted mb-1">Email</label>
@@ -108,7 +120,7 @@ export default function Signup() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm mb-4"
+          className="input mb-4"
         />
 
         <label className="block font-mono text-[11px] text-muted mb-1">Password (min. 8 characters)</label>
@@ -118,7 +130,7 @@ export default function Signup() {
           minLength={8}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm mb-4"
+          className="input mb-4"
         />
 
         <label className="block font-mono text-[11px] text-muted mb-1">Your address</label>
@@ -131,7 +143,7 @@ export default function Signup() {
               setSlugTouched(true);
               setSlug(slugifyClient(e.target.value));
             }}
-            className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm"
+            className="input"
           />
         </div>
         <p className="font-mono text-[11px] mb-6 h-4">
@@ -145,11 +157,13 @@ export default function Signup() {
         <button
           type="submit"
           disabled={busy || slugStatus === "unavailable"}
-          className="w-full border border-gold/50 py-3 font-mono text-xs uppercase tracking-widest2 text-gold-soft hover:bg-gold hover:text-ink transition-colors disabled:opacity-50"
+          className="btn-solid w-full"
         >
           {busy ? "Creating…" : "Create my CV"}
         </button>
       </form>
+      </main>
+      <SiteFooter />
     </div>
   );
 }

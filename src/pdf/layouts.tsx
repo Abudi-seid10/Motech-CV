@@ -11,17 +11,17 @@ import { CVData } from "@/lib/types";
  * Built-in Helvetica only (no font fetching), real selectable text.
  */
 
-const TEXT = "#26262b";
-const MUTED = "#6b6b73";
+export const TEXT = "#26262b";
+export const MUTED = "#6b6b73";
 
-const bare = (u: string) => u.replace(/^https?:\/\//, "");
-const skillItems = (d: CVData) => d.competencies.flatMap((g) => g.items).filter(Boolean);
-const contactLines = (d: CVData) =>
+export const bare = (u: string) => u.replace(/^https?:\/\//, "");
+export const skillItems = (d: CVData) => d.competencies.flatMap((g) => g.items).filter(Boolean);
+export const contactLines = (d: CVData) =>
   [d.personal.phone, d.personal.email, d.personal.location, d.personal.linkedin && bare(d.personal.linkedin), d.personal.github && bare(d.personal.github)].filter(
     Boolean
   ) as string[];
 
-const s = StyleSheet.create({
+export const s = StyleSheet.create({
   body: { fontSize: 9.5, lineHeight: 1.45 },
   bold: { fontFamily: "Helvetica-Bold" },
   row: { flexDirection: "row" },
@@ -30,7 +30,7 @@ const s = StyleSheet.create({
   bulletText: { flex: 1, fontSize: 9.5, lineHeight: 1.4 },
 });
 
-function Bullets({ items, color, glyph = "•" }: { items?: string[]; color?: string; glyph?: string }) {
+export function Bullets({ items, color, glyph = "•" }: { items?: string[]; color?: string; glyph?: string }) {
   if (!items?.length) return null;
   return (
     <View>
@@ -44,7 +44,7 @@ function Bullets({ items, color, glyph = "•" }: { items?: string[]; color?: st
   );
 }
 
-function Doc({ data, children }: { data: CVData; children: ReactNode }) {
+export function Doc({ data, children }: { data: CVData; children: ReactNode }) {
   const { personal } = data;
   return (
     <Document title={personal.name ? `${personal.name} — CV` : "CV"} author={personal.name || undefined}>
@@ -54,7 +54,7 @@ function Doc({ data, children }: { data: CVData; children: ReactNode }) {
 }
 
 /** Shared "lesser" sections: certifications, awards, custom — styled by each layout's heading. */
-function ExtraSections({ data, Head }: { data: CVData; Head: (p: { children: string }) => JSX.Element }) {
+export function ExtraSections({ data, Head }: { data: CVData; Head: (p: { children: string }) => JSX.Element }) {
   return (
     <>
       {data.certifications.length > 0 && (

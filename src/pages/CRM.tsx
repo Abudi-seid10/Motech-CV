@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import SiteHeader, { navLink } from "@/components/brand/SiteHeader";
+import SiteFooter from "@/components/brand/SiteFooter";
+import StatusScreen from "@/components/brand/StatusScreen";
 import { useSession } from "@/hooks/useSession";
 import { fetchOwnProfile, Plan } from "@/lib/api";
 import { PLANS, contactLimitFor, canExportContacts } from "@/lib/plans";
@@ -68,7 +71,11 @@ export default function CRM() {
   }
 
   if (sessionLoading || (!contacts && !error)) {
-    return <div className="min-h-screen grid place-items-center font-mono text-sm text-muted">Loading…</div>;
+    return (
+      <StatusScreen>
+        <p className="font-mono text-sm text-muted">Loading…</p>
+      </StatusScreen>
+    );
   }
 
   const limit = contactLimitFor(plan);
@@ -85,19 +92,16 @@ export default function CRM() {
   };
 
   return (
-    <div className="min-h-screen pb-32">
-      <header className="sticky top-0 z-10 bg-ink/90 backdrop-blur border-b border-border px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-xl sm:text-2xl tracking-wide">CRM — /{slug}</h1>
-        <div className="flex items-center gap-4 font-mono text-xs">
-          <Link to={`/${slug}/edit`} className="text-muted hover:text-gold">Edit CV ↗</Link>
-          <Link to={`/card/${slug}`} className="text-muted hover:text-gold">Card ↗</Link>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col">
+      <SiteHeader title={`CRM — /${slug}`}>
+        <Link to={`/${slug}/edit`} className={navLink}>Edit CV ↗</Link>
+        <Link to={`/card/${slug}`} className={navLink}>Card ↗</Link>
+      </SiteHeader>
 
       {error && <p className="px-4 sm:px-6 py-2 font-mono text-xs text-red-400">{error}</p>}
 
       {contacts && (
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8">
+        <div className="mx-auto w-full max-w-4xl flex-1 px-4 sm:px-6 py-8">
           <p className="text-muted text-sm mb-6">
             People who shared their contact info on your{" "}
             <Link to={`/card/${slug}`} className="text-gold-dim hover:text-gold">card</Link> show up here.
@@ -205,6 +209,7 @@ export default function CRM() {
           )}
         </div>
       )}
+      <SiteFooter className="mt-auto" />
     </div>
   );
 }

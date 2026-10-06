@@ -3,9 +3,13 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useSession } from "@/hooks/useSession";
 import { fetchOwnProfile, saveProfile, logout, ProfileRow } from "@/lib/api";
 import { CVData, emptyCVData, normalizeCVData } from "@/lib/types";
+import SiteHeader, { navLink, navButton } from "@/components/brand/SiteHeader";
+import SiteFooter from "@/components/brand/SiteFooter";
+import StatusScreen from "@/components/brand/StatusScreen";
 import { THEMES, ThemeId, DEFAULT_THEME, LAYOUTS, layoutOf } from "@/themes";
 import { fileToPhotoDataUrl } from "@/lib/photo";
 import { SUPPORTED_ACCEPT } from "@/lib/parseResume";
+import { LINKEDIN_ACCEPT } from "@/lib/linkedin";
 import ArrayEditor from "@/components/edit/ArrayEditor";
 import CustomSectionsEditor from "@/components/edit/CustomSectionsEditor";
 import CVPreview from "@/components/cv/CVPreview";
@@ -81,6 +85,29 @@ export default function Edit() {
     navigate("/login");
   }
 
+  async function handleLinkedInUpload(e: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (!files.length) return;
+    setImporting(true);
+    setImportMsg(null);
+    try {
+      const [{ parseLinkedInExport }, { applyParsed, summarizeParsed }] = await Promise.all([
+        import("@/lib/linkedin"),
+        import("@/lib/parseResume"),
+      ]);
+      const parsed = await parseLinkedInExport(files);
+      const found = summarizeParsed(parsed);
+      if (!found) throw new Error("Couldn't find any profile data in those files.");
+      setData((prev) => applyParsed(prev, parsed));
+      setImportMsg({ text: `From LinkedIn: ${found} Check the preview before saving.`, error: false });
+    } catch (err) {
+      setImportMsg({ text: (err as Error).message, error: true });
+    } finally {
+      setImporting(false);
+    }
+  }
+
   async function handleResumeUpload(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = ""; // allow re-uploading the same file later
@@ -112,34 +139,33 @@ export default function Edit() {
   }
 
   if (sessionLoading || (!profile && status !== "error")) {
-    return <div className="min-h-screen grid place-items-center font-mono text-sm text-muted">Loading…</div>;
+    return (
+      <StatusScreen>
+        <p className="font-mono text-sm text-muted">Loading…</p>
+      </StatusScreen>
+    );
   }
 
   return (
-    <div className="min-h-screen pb-32">
-      <header className="sticky top-0 z-20 bg-ink/90 backdrop-blur border-b border-border px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <h1 className="font-display text-xl sm:text-2xl tracking-wide truncate">Editing /{slug}</h1>
-          {profile && (
-            <span className="font-mono text-[10px] uppercase tracking-widest2 text-gold-dim border border-gold/30 rounded-sm px-2 py-0.5">
+    <div className="min-h-screen flex flex-col">
+      <SiteHeader
+        title={`Editing /${slug}`}
+        badge={
+          profile && (
+            <span className="hidden sm:inline font-mono text-[10px] uppercase tracking-widest2 text-gold-dim border border-gold/30 rounded-full px-2.5 py-0.5">
               {profile.plan} plan
             </span>
-          )}
-        </div>
-        <div className="flex items-center gap-3 sm:gap-4 font-mono text-xs">
-          <Link to={`/${slug}`} className="text-muted hover:text-gold">View ↗</Link>
-          <Link to={`/card/${slug}`} className="text-muted hover:text-gold">Card ↗</Link>
-          <Link to={`/${slug}/crm`} className="text-muted hover:text-gold">CRM ↗</Link>
-          <button onClick={signOut} className="text-muted hover:text-gold">Sign out</button>
-          <button
-            onClick={save}
-            disabled={status === "saving" || !profile}
-            className="border border-gold/50 px-4 py-2 uppercase tracking-widest2 text-gold-soft hover:bg-gold hover:text-ink transition-colors disabled:opacity-50"
-          >
-            {status === "saving" ? "Saving…" : "Save"}
-          </button>
-        </div>
-      </header>
+          )
+        }
+      >
+        <Link to={`/${slug}`} className={navLink}>View ↗</Link>
+        <Link to={`/card/${slug}`} className={navLink}>Card ↗</Link>
+        <Link to={`/${slug}/crm`} className={navLink}>CRM ↗</Link>
+        <button onClick={signOut} className={navLink}>Sign out</button>
+        <button onClick={save} disabled={status === "saving" || !profile} className={navButton}>
+          {status === "saving" ? "Saving…" : "Save"}
+        </button>
+      </SiteHeader>
 
       {statusMsg && (
         <p className={`px-4 sm:px-6 py-2 font-mono text-xs ${status === "error" ? "text-red-400" : "text-gold-soft"}`}>
@@ -189,6 +215,25 @@ export default function Edit() {
               )}
             </section>
 
+            <section className="card p-5">
+              <h2 className="eyebrow mb-2">Import from LinkedIn</h2>
+              <p className="text-muted text-xs mb-3 leading-relaxed">
+                LinkedIn doesn't let other sites read your profile, but it will give you your own data:
+                on LinkedIn go to <span className="text-bone">Settings → Data privacy → Get a copy of your data</span>,
+                pick <span className="text-bone">Want something in particular?</span> and tick Profile, Positions, Education,
+                Skills, Certifications, Languages, Honors and Projects. LinkedIn emails you a ZIP — upload it here
+                (or the individual CSV files). It's read in your browser and never uploaded.
+              </p>
+              <input
+                type="file"
+                accept={LINKEDIN_ACCEPT}
+                multiple
+                onChange={handleLinkedInUpload}
+                disabled={importing}
+                className="text-xs font-mono file:mr-3 file:border file:border-gold/50 file:bg-transparent file:px-3 file:py-1.5 file:text-gold-soft file:font-mono file:text-xs file:uppercase file:tracking-widest2 hover:file:bg-gold hover:file:text-ink file:transition-colors file:cursor-pointer"
+              />
+            </section>
+
             <section>
               <h2 className="eyebrow mb-4">CV format</h2>
               <div className="grid sm:grid-cols-2 gap-4 mb-6">
@@ -236,7 +281,7 @@ export default function Edit() {
                 </label>
                 <input
                   placeholder={data.personal.title || "e.g. Open to freelance work"}
-                  className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm"
+                  className="input"
                   value={data.card.tagline}
                   onChange={(e) => setData({ ...data, card: { ...data.card, tagline: e.target.value } })}
                 />
@@ -314,7 +359,7 @@ export default function Edit() {
                   <div key={k} className={k === "title" ? "sm:col-span-2" : ""}>
                     <label className="block font-mono text-[11px] text-muted mb-1 capitalize">{k}</label>
                     <input
-                      className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm"
+                      className="input"
                       value={data.personal[k]}
                       onChange={(e) => setData({ ...data, personal: { ...data.personal, [k]: e.target.value } })}
                     />
@@ -326,7 +371,7 @@ export default function Edit() {
             <section>
               <h2 className="eyebrow mb-4">Summary</h2>
               <textarea
-                className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm min-h-[120px]"
+                className="input min-h-[120px]"
                 value={data.summary}
                 onChange={(e) => setData({ ...data, summary: e.target.value })}
               />
@@ -409,7 +454,7 @@ export default function Edit() {
             <section>
               <h2 className="eyebrow mb-4">Strengths (one per line)</h2>
               <textarea
-                className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm min-h-[100px]"
+                className="input min-h-[100px]"
                 value={data.strengths.join("\n")}
                 onChange={(e) => setData({ ...data, strengths: e.target.value.split("\n") })}
               />
@@ -425,7 +470,7 @@ export default function Edit() {
               of the editor chrome around it. Sticky on desktop so it stays
               in view while the (usually much longer) form scrolls. */}
           <div className={`${mobileView === "edit" ? "hidden" : "block"} lg:block border-l border-border`}>
-            <div className="lg:sticky lg:top-[73px] lg:h-[calc(100vh-73px)] overflow-y-auto">
+            <div className="lg:sticky lg:top-[57px] lg:h-[calc(100vh-57px)] overflow-y-auto">
               <div data-theme={theme} className="bg-ink min-h-full">
                 <CVPreview data={data} filename={slug} />
               </div>
@@ -433,6 +478,7 @@ export default function Edit() {
           </div>
         </div>
       )}
+      <SiteFooter />
     </div>
   );
 }

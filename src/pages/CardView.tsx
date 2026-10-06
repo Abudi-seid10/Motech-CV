@@ -2,6 +2,9 @@ import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useProfile } from "@/hooks/useProfile";
 import { applyTheme, DEFAULT_THEME } from "@/themes";
+import SiteHeader, { navLink } from "@/components/brand/SiteHeader";
+import SiteFooter from "@/components/brand/SiteFooter";
+import StatusScreen from "@/components/brand/StatusScreen";
 import DownloadButton from "@/components/DownloadButton";
 import ContactForm from "@/components/ContactForm";
 import { downloadVCard } from "@/lib/vcard";
@@ -27,19 +30,21 @@ export default function CardView() {
   }, [theme]);
 
   if (loading) {
-    return <div className="min-h-screen grid place-items-center font-mono text-sm text-muted">Loading…</div>;
+    return (
+      <StatusScreen>
+        <p className="font-mono text-sm text-muted">Loading…</p>
+      </StatusScreen>
+    );
   }
 
   if (notFound || error || !data) {
     return (
-      <div className="min-h-screen grid place-items-center px-6 text-center">
+      <StatusScreen>
         <div>
           <h1 className="font-display text-3xl mb-3">No card at /card/{slug}</h1>
-          <Link to="/signup" className="text-gold-dim hover:text-gold font-mono text-xs">
-            Claim /{slug} →
-          </Link>
+          <Link to="/signup" className="btn-solid">Claim /{slug} →</Link>
         </div>
-      </div>
+      </StatusScreen>
     );
   }
 
@@ -74,7 +79,12 @@ export default function CardView() {
     : null;
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 py-12 sm:py-20">
+    <div className="min-h-screen flex flex-col">
+      <SiteHeader title="Card">
+        <Link to={`/${slug}`} className={navLink}>Full CV</Link>
+        <Link to="/signup" className={navLink}>Make your own</Link>
+      </SiteHeader>
+      <main className="flex-1 flex flex-col items-center px-4 py-12 sm:py-16">
       {isDemo && (
         <p className="font-mono text-[11px] text-gold-dim mb-6 border border-gold/30 rounded-full px-3 py-1">
           Demo card — <Link to="/signup" className="underline">build your own</Link>
@@ -126,7 +136,7 @@ export default function CardView() {
         <div className="space-y-3 mb-8">
           <Link
             to={`/${slug}`}
-            className="block w-full border border-gold/50 rounded-full px-5 py-3 font-mono text-xs uppercase tracking-widest2 text-gold-soft hover:bg-gold hover:text-ink transition-colors"
+            className="btn-solid w-full"
           >
             View full CV
           </Link>
@@ -149,6 +159,8 @@ export default function CardView() {
           <Link to="/signup" className="text-gold-dim hover:text-gold">Make your own card →</Link>
         </p>
       </div>
+      </main>
+      <SiteFooter />
     </div>
   );
 }

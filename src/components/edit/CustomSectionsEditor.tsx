@@ -51,7 +51,7 @@ export default function CustomSectionsEditor({
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addSection())}
-          className="flex-1 bg-raised border border-border rounded-sm px-3 py-2 text-sm"
+          className="flex-1 input"
         />
         <button
           type="button"

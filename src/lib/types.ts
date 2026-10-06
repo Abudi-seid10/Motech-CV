@@ -1,4 +1,4 @@
-export type LayoutId = "editorial" | "classic" | "profile" | "teal" | "navy";
+export type LayoutId = "editorial" | "classic" | "profile" | "teal" | "navy" | "modern" | "executive" | "creative";
 
 export interface Personal {
   name: string;

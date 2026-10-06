@@ -60,7 +60,7 @@ export default function ContactForm({
         placeholder="Your name"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm"
+        className="input"
       />
       <input
         required
@@ -68,20 +68,20 @@ export default function ContactForm({
         placeholder="Your email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm"
+        className="input"
       />
       <input
         type="tel"
         placeholder="Phone (optional)"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
-        className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm"
+        className="input"
       />
       <textarea
         placeholder="Message (optional)"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        className="w-full bg-raised border border-border rounded-sm px-3 py-2 text-sm min-h-[70px]"
+        className="input min-h-[70px]"
       />
       {error && <p className="font-mono text-xs text-red-400">{error}</p>}
       <button
