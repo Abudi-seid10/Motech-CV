@@ -160,6 +160,7 @@ export default function Edit() {
       >
         <Link to={`/${slug}`} className={navLink}>View ↗</Link>
         <Link to={`/card/${slug}`} className={navLink}>Card ↗</Link>
+        <Link to={`/${slug}/company`} className={navLink}>Company card</Link>
         <Link to={`/${slug}/crm`} className={navLink}>CRM ↗</Link>
         <button onClick={signOut} className={navLink}>Sign out</button>
         <button onClick={save} disabled={status === "saving" || !profile} className={navButton}>
@@ -469,7 +470,7 @@ export default function Edit() {
           {/* Live preview pane — themed locally via data-theme, independent
               of the editor chrome around it. Sticky on desktop so it stays
               in view while the (usually much longer) form scrolls. */}
-          <div className={`${mobileView === "edit" ? "hidden" : "block"} lg:block border-l border-border`}>
+          <div className={`${mobileView === "edit" ? "hidden" : "block"} lg:block lg:self-stretch border-l border-border`}>
             <div className="lg:sticky lg:top-[57px] lg:h-[calc(100vh-57px)] overflow-y-auto">
               <div data-theme={theme} className="bg-ink min-h-full">
                 <CVPreview data={data} filename={slug} />

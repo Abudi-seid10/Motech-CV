@@ -5,6 +5,7 @@ export const RESERVED_SLUGS = new Set([
   "logout",
   "edit",
   "card",
+  "company",
   "me",
   "admin",
   "assets",
