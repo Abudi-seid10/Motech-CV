@@ -469,7 +469,7 @@ export default function Edit() {
           {/* Live preview pane — themed locally via data-theme, independent
               of the editor chrome around it. Sticky on desktop so it stays
               in view while the (usually much longer) form scrolls. */}
-          <div className={`${mobileView === "edit" ? "hidden" : "block"} lg:block border-l border-border`}>
+          <div className={`${mobileView === "edit" ? "hidden" : "block"} lg:block lg:self-stretch border-l border-border`}>
             <div className="lg:sticky lg:top-[57px] lg:h-[calc(100vh-57px)] overflow-y-auto">
               <div data-theme={theme} className="bg-ink min-h-full">
                 <CVPreview data={data} filename={slug} />
