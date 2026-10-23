@@ -245,3 +245,63 @@ create trigger profiles_protect_plan
 --   supabase/functions/send-hello Edge Function and set its RESEND_API_KEY
 --   secret — see README → "Contact form, CRM, and the hello email".
 -- ---------------------------------------------------------------------------
+
+-- ===========================================================================
+-- Part 3: Company cards
+--
+-- A signed-in user can create one customisable company card, served publicly
+-- at /company/{slug}. Its look and buttons live in `data` (jsonb), and are
+-- edited at /{profile-slug}/company.
+-- ===========================================================================
+
+create table if not exists public.company_cards (
+  id          uuid primary key default gen_random_uuid(),
+  owner_id    uuid not null unique references auth.users(id) on delete cascade,
+  slug        text not null unique,
+  is_public   boolean not null default true,
+  data        jsonb not null default '{}'::jsonb,
+  updated_at  timestamptz not null default now(),
+  constraint company_slug_format check (slug ~ '^[a-z0-9]([a-z0-9-]{1,30}[a-z0-9])?$')
+);
+
+alter table public.company_cards enable row level security;
+
+drop policy if exists "Public company cards are readable by anyone" on public.company_cards;
+create policy "Public company cards are readable by anyone"
+  on public.company_cards for select
+  using (is_public = true);
+
+drop policy if exists "Owners can read their own company card" on public.company_cards;
+create policy "Owners can read their own company card"
+  on public.company_cards for select
+  using (auth.uid() = owner_id);
+
+drop policy if exists "Owners can create their company card" on public.company_cards;
+create policy "Owners can create their company card"
+  on public.company_cards for insert
+  with check (auth.uid() = owner_id);
+
+drop policy if exists "Owners can update their company card" on public.company_cards;
+create policy "Owners can update their company card"
+  on public.company_cards for update
+  using (auth.uid() = owner_id)
+  with check (auth.uid() = owner_id);
+
+drop policy if exists "Owners can delete their company card" on public.company_cards;
+create policy "Owners can delete their company card"
+  on public.company_cards for delete
+  using (auth.uid() = owner_id);
+
+drop trigger if exists company_cards_set_updated_at on public.company_cards;
+create trigger company_cards_set_updated_at
+  before update on public.company_cards
+  for each row execute function public.set_updated_at();
+
+-- "company" now owns the /company/... URL prefix, so profiles can't claim it.
+alter table public.profiles drop constraint if exists slug_not_reserved;
+alter table public.profiles add constraint slug_not_reserved check (
+  slug not in (
+    'api','login','signup','logout','edit','card','company','me','admin','assets','static',
+    'favicon.ico','grain.png','index','index.html','robots.txt','sitemap.xml'
+  )
+);

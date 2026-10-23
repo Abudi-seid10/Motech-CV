@@ -160,6 +160,7 @@ export default function Edit() {
       >
         <Link to={`/${slug}`} className={navLink}>View ↗</Link>
         <Link to={`/card/${slug}`} className={navLink}>Card ↗</Link>
+        <Link to={`/${slug}/company`} className={navLink}>Company card</Link>
         <Link to={`/${slug}/crm`} className={navLink}>CRM ↗</Link>
         <button onClick={signOut} className={navLink}>Sign out</button>
         <button onClick={save} disabled={status === "saving" || !profile} className={navButton}>
