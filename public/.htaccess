@@ -1,0 +1,10 @@
+# Single-page app fallback: serve index.html for any path that isn't a real file,
+# so deep links like /card/me or /yourname/edit work on refresh (Plesk/Apache).
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
